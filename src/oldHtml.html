@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SORTER PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+    <link rel="stylesheet" href="normalize.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <section class="main-page">
+      <form action="#">
+        <div class="keywords">
+            <label for="input-keywords" class="label1">
+              Введи ключевые слова
+            </label>
+            <br />
+            <input required type="text" class="text-3" id="input-keywords"/> 
+            <button class="butt-3-repl" id="btn-replace">Замена</button>
+            <button class="butt-3-repl" id="btn-replace-2">ЗАМЕНА (ВЕРХНИЙ РЕГИСТР)</button>
+            <input type="text" class="text-replace" id="input-replace"/>
+        </div>
+
+        <div>
+          <div class="block-1">
+            <div class="area">
+              <label for="incoming-list" class="label1">
+                Вставь список сюда
+              </label>
+              <textarea
+                required
+                class="text-1"
+                id="incoming-list"
+                cols="100"
+                rows="10"
+                autofocus
+              ></textarea>
+            </div>
+            
+            <div class="buttons-1">
+              <button class="butt-1-1" id="btn-two-areas">
+                РАЗДЕЛИТЬ НА ДВА СПИСКА по любым совпадениям!
+              </button>
+              <div class="buttons-strict">
+                <button class="butt-strict" id="btn-strict-begin">
+                  Точное совпадение по НАЧАЛЬНЫМ символам
+                </button>
+                <button class="butt-strict" id="btn-strict-inner-values">
+                  Точное совп. по ЦЕНТРАЛЬНЫМ элементам
+                </button>
+                <button class="butt-strict" id="btn-strict-end">
+                  Точное совпадение по ПОСЛЕДНИМ символам
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="block2">
+            <div class="area">
+              <label for="with-keywords" class="label1">
+                Данные c ключевыми словами
+              </label>
+              <textarea class="text-2" id="with-keywords" cols="144" rows="8"></textarea>
+            </div>
+            <div class="button-one-area">
+              <button class="butt-2" id="btn-with-keywords">
+                С ключевыми словами
+              </button>
+            </div>
+          </div>
+
+          <div class="block2">
+            <div class="area">
+              <label for="without-keywords" class="labl1">
+                Данные без ключевых слов
+              </label>
+              <textarea
+                class="text-4"
+                id="without-keywords"
+                cols="144"
+                rows="8"
+                ></textarea>
+            </div>
+            
+            <div class="button-one-area">
+              <button class="butt-4" id="btn-without-keywords">
+                Без ключевых слов
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+   
+      <div id="down">
+        <button id="del">clear local storage</button>
+      </div>
+
+      <footer>
+        <h3 class="h3">ОБРОБНИК ТАБЛИЦЬ</h3>
+      </footer>
+    </section>
+   
+    <script src="main.js"></script>
+  </body>
+</html>
