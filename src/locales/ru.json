@@ -1,0 +1,31 @@
+{
+  "langLabel": "Язык",
+  "enterKeywordsLabel": "Введи ключевые слова",
+  "replacementsPlaceholder": "замены: a1 a2 a3 (столько же, сколько ключей)",
+  "replace": "Замена",
+  "replaceUppercase": "ЗАМЕНА (ВЕРХНИЙ РЕГИСТР)",
+  "pasteListHere": "Вставь список сюда",
+  "eachLinePlaceholder": "каждая строка — отдельная запись",
+  "keywordsPlaceholder": "например: apple orange banana",
+  "splitByAnyMatches": "РАЗДЕЛИТЬ НА ДВА СПИСКА по любым совпадениям!",
+  "exactBegin": "Точное совпадение по НАЧАЛЬНЫМ символам",
+  "exactInner": "Точное совп. по ЦЕНТРАЛЬНЫМ элементам",
+  "exactEnd": "Точное совпадение по ПОСЛЕДНИМ символам",
+  "dataWithKeywords": "Данные c ключевыми словами",
+  "withKeywordsBtn": "С ключевыми словами",
+  "dataWithoutKeywords": "Данные без ключевых слов",
+  "withoutKeywordsBtn": "Без ключевых слов",
+  "clearAllData": "Очистить все данные",
+  "clearLists": "очистить списки",
+  "copyTooltip": "Копировать",
+  "replacementError": "Ошибка замены",
+  "differentCountError": "Разное количество введённых значений! Введите корректные данные!",
+  "importHint": "или перетащите файл сюда",
+  "dataWithoutDuplicates": "данные без дублей",
+  "duplicates": "дубликаты",
+  "deduplicate": "Очистить от дубликатов"
+  ,
+  "copied": "Скопировано"
+}
+
+

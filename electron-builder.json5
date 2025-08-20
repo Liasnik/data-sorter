@@ -1,9 +1,9 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "com.yourorg.sorter",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "Sorter",
   "directories": {
     "output": "release/${version}"
   },
@@ -29,10 +29,12 @@
     "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
   },
   "nsis": {
-    "oneClick": false,
-    "perMachine": false,
-    "allowToChangeInstallationDirectory": true,
-    "deleteAppDataOnUninstall": false
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sorter",
+      "deleteAppDataOnUninstall": true
   },
   "linux": {
     "target": [

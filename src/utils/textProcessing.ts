@@ -27,81 +27,99 @@ export function joinLines(lines: string[]): string {
 
 export function filterWithAnyKeywordCaseInsensitive(lines: string[], keywords: string[]): string[] {
   if (!lines.length || !keywords.length) return [];
-  const upperKeywords = keywords.map(k => k.toUpperCase());
-  return lines.filter(line => {
-    const upperLine = line.toUpperCase();
-    return upperKeywords.some(k => upperLine.includes(k));
-  });
+  const regexes = buildRegexChunks(keywords, { caseInsensitive: true });
+  return lines.filter(line => regexes.some(rx => rx.test(line)));
 }
 
 export function filterWithoutAnyKeywordCaseInsensitive(lines: string[], keywords: string[]): string[] {
   if (!lines.length) return [];
   if (!keywords.length) return [...lines];
-  const upperKeywords = keywords.map(k => k.toUpperCase());
-  return lines.filter(line => {
-    const upperLine = line.toUpperCase();
-    return !upperKeywords.some(k => upperLine.includes(k));
-  });
+  const regexes = buildRegexChunks(keywords, { caseInsensitive: true });
+  return lines.filter(line => !regexes.some(rx => rx.test(line)));
 }
 
 export function splitAtBeginning(lines: string[], keywords: string[]): { withKeywords: string[]; withoutKeywords: string[] } {
-  const withKeywords = lines.filter(item => {
-    return keywords.some(allowed => item.includes(`\t${allowed}`));
-  });
-  const withoutKeywords = lines.filter(item => {
-    return !keywords.some(forbidden => item.includes(`\t${forbidden}`));
-  });
+  // Match keywords immediately following a tab character
+  const regexes = buildRegexChunks(keywords, { wrapper: '\\t(?:{kw})' });
+  const withKeywords = lines.filter(item => regexes.some(rx => rx.test(item)));
+  const withoutKeywords = lines.filter(item => !regexes.some(rx => rx.test(item)));
   return { withKeywords, withoutKeywords };
 }
 
 export function splitByCellInnerValue(lines: string[], keywords: string[]): { withKeywords: string[]; withoutKeywords: string[] } {
-  const withKeywords = lines.filter(item => {
-    return keywords.some(allowed => item.includes(` ${allowed} `));
-  });
-  const withoutKeywords = lines.filter(item => {
-    return !keywords.some(forbidden => item.includes(` ${forbidden} `));
-  });
+  // Match keywords wrapped by single spaces on both sides to mirror original logic
+  const regexes = buildRegexChunks(keywords, { wrapper: ' (?:{kw}) ' });
+  const withKeywords = lines.filter(item => regexes.some(rx => rx.test(item)));
+  const withoutKeywords = lines.filter(item => !regexes.some(rx => rx.test(item)));
   return { withKeywords, withoutKeywords };
 }
 
 export function splitAtEnding(lines: string[], keywords: string[]): { withKeywords: string[]; withoutKeywords: string[] } {
-  const withKeywords = lines.filter(item => {
-    return keywords.some(allowed => item.includes(`${allowed}\t`));
-  });
-  const withoutKeywords = lines.filter(item => {
-    return !keywords.some(forbidden => item.includes(`${forbidden}\t`));
-  });
+  // Match keywords immediately followed by a tab character
+  const regexes = buildRegexChunks(keywords, { wrapper: '(?:{kw})\\t' });
+  const withKeywords = lines.filter(item => regexes.some(rx => rx.test(item)));
+  const withoutKeywords = lines.filter(item => !regexes.some(rx => rx.test(item)));
   return { withKeywords, withoutKeywords };
 }
 
 export function replaceValuesCaseSensitive(lines: string[], keywords: string[], replacements: string[]): string[] {
   if (keywords.length !== replacements.length) {
-    throw new Error('Different number of keywords and replacements. Please provide correct data.');
+    throw new Error('differentCountError');
   }
-  const result = [...lines];
-  for (let i = 0; i < keywords.length; i++) {
-    for (let j = 0; j < result.length; j++) {
-      result[j] = result[j].replace(`${keywords[i]} `, `${replacements[i]} `);
-      result[j] = result[j].replace(`${keywords[i]}\t`, `${replacements[i]}\t`);
-    }
-  }
-  return result;
+  if (!lines.length || !keywords.length) return [...lines];
+  const map = new Map<string, string>();
+  for (let i = 0; i < keywords.length; i++) map.set(keywords[i], replacements[i]);
+  const pattern = new RegExp(`(?:${joinEscaped(keywords)})(?=[\t ])`, 'g');
+  return lines.map(line =>
+    line.replace(pattern, (matched) => {
+      const rep = map.get(matched);
+      return rep !== undefined ? rep : matched;
+    })
+  );
 }
 
 export function replaceValuesUpperCase(lines: string[], keywords: string[], replacements: string[]): string[] {
   if (keywords.length !== replacements.length) {
-    throw new Error('Different number of keywords and replacements. Please provide correct data.');
+    throw new Error('differentCountError');
   }
-  const result: string[] = [];
-  for (let j = 0; j < lines.length; j++) {
-    let upperLine = lines[j].toUpperCase();
-    for (let i = 0; i < keywords.length; i++) {
-      upperLine = upperLine.replace(`${keywords[i].toUpperCase()}\t`, `${replacements[i]}\t`);
-      upperLine = upperLine.replace(`${keywords[i].toUpperCase()} `, `${replacements[i]} `);
-    }
-    result.push(upperLine);
+  if (!lines.length || !keywords.length) return [...lines];
+  const map = new Map<string, string>();
+  for (let i = 0; i < keywords.length; i++) map.set(keywords[i].toUpperCase(), replacements[i]);
+  const pattern = new RegExp(`(?:${joinEscaped(keywords.map(k => k.toUpperCase()))})(?=[\t ])`, 'g');
+  return lines.map(line =>
+    line.toUpperCase().replace(pattern, (matched) => {
+      const rep = map.get(matched);
+      return rep !== undefined ? rep : matched;
+    })
+  );
+}
+
+// ========== Helpers for performance ==========
+function escapeRegex(source: string): string {
+  return source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function joinEscaped(keywords: string[]): string {
+  // Escape and join with |, skipping empty strings
+  return keywords.filter(Boolean).map(escapeRegex).join('|');
+}
+
+function buildRegexChunks(
+  keywords: string[],
+  opts?: { caseInsensitive?: boolean; wrapper?: string }
+): RegExp[] {
+  const caseInsensitive = opts?.caseInsensitive === true;
+  const wrapper = opts?.wrapper; // e.g., "\\t(?:{kw})" or " (?:{kw}) "
+  const chunks: RegExp[] = [];
+  const BATCH = 250; // limit alternatives per regex to avoid gigantic patterns
+  for (let i = 0; i < keywords.length; i += BATCH) {
+    const slice = keywords.slice(i, i + BATCH).filter(Boolean).map(escapeRegex);
+    if (!slice.length) continue;
+    const body = slice.join('|');
+    const pattern = wrapper ? wrapper.replace('{kw}', body) : `(?:${body})`;
+    chunks.push(new RegExp(pattern, caseInsensitive ? 'i' : ''));
   }
-  return result;
+  return chunks;
 }
 
 

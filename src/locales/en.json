@@ -1,0 +1,30 @@
+{
+  "langLabel": "Language",
+  "enterKeywordsLabel": "Enter keywords",
+  "replacementsPlaceholder": "replacements: a1 a2 a3 (same count as keywords)",
+  "replace": "Replace",
+  "replaceUppercase": "REPLACE (UPPERCASE)",
+  "pasteListHere": "Paste list here",
+  "eachLinePlaceholder": "each line is a separate record",
+  "keywordsPlaceholder": "e.g.: apple orange banana",
+  "splitByAnyMatches": "SPLIT INTO TWO LISTS by any matches!",
+  "exactBegin": "Exact match at BEGINNING (tab-prefixed)",
+  "exactInner": "Exact match in MIDDLE cells (space-wrapped)",
+  "exactEnd": "Exact match at END (tab-suffixed)",
+  "dataWithKeywords": "Data with keywords",
+  "withKeywordsBtn": "With keywords",
+  "dataWithoutKeywords": "Data without keywords",
+  "withoutKeywordsBtn": "Without keywords",
+  "clearAllData": "clear all data",
+  "clearLists": "clear lists",
+  "copyTooltip": "Copy",
+  "replacementError": "Replacement error",
+  "differentCountError": "Different number of keywords and replacements. Please provide correct data.",
+  "importHint": "or drag & drop here",
+  "dataWithoutDuplicates": "Data without duplicates",
+  "duplicates": "Duplicates",
+  "deduplicate": "Remove duplicates",
+  "copied": "Copied"
+}
+
+
