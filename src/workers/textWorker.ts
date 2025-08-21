@@ -8,7 +8,7 @@ import {
   splitAtBeginning,
   splitByCellInnerValue,
   splitAtEnding,
-  replaceValuesCaseSensitive,
+  replaceValuesCaseInsensitive,
   replaceValuesUpperCase,
   joinLines,
 } from '../utils/textProcessing'
@@ -67,7 +67,8 @@ self.onmessage = (event: MessageEvent<Actions>) => {
       case 'replace': {
         const keys = getKeywordsArray(message.keywords)
         const replacements = getReplacementArray(message.replacements)
-        const replaced = replaceValuesCaseSensitive(inputLines, keys, replacements)
+        // Make default Replace case-insensitive
+        const replaced = replaceValuesCaseInsensitive(inputLines, keys, replacements)
         post({ id: message.id, ok: true, with: joinLines(replaced) })
         return
       }
@@ -132,7 +133,7 @@ self.onmessage = (event: MessageEvent<Actions>) => {
       case 'replace': {
         const keys = getKeywordsArray(message.keywords)
         const replacements = getReplacementArray(message.replacements)
-        const replaced = replaceValuesCaseSensitive(inputLines, keys, replacements)
+        const replaced = replaceValuesCaseInsensitive(inputLines, keys, replacements)
         ;(self as unknown as { postMessage: (r: Result) => void }).postMessage({ id: message.id, ok: true, with: joinLines(replaced) })
         return
       }

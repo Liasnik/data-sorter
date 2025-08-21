@@ -61,6 +61,38 @@ body {
   min-height: 100vh;
 }
 
+/* Top right minimal controls (web) */
+.top-controls { position: fixed; top: 10px; right: 12px; display: flex; gap: 8px; z-index: 1000; }
+.top-dd { position: relative; }
+.top-dd-trigger {
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+.top-dd-trigger:hover { background: #131726; }
+.top-dd-menu {
+  position: absolute; right: 0; top: 34px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  padding: 6px;
+  display: flex; flex-direction: column;
+  min-width: 160px;
+}
+.top-dd-item { text-align: left; background: transparent; border: 0; color: var(--text); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+.top-dd-item:hover { background: #131726; }
+.top-dd-item.active { background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.25); }
+.top-dd-item { display: flex; align-items: center; gap: 8px; }
+.radio-dot { width: 16px; height: 16px; border-radius: 999px; border: 2px solid #6b7280; display: inline-block; position: relative; }
+.radio-dot.checked { border-color: #7aa2ff; }
+.radio-dot.checked::after { content: ''; position: absolute; inset: 3px; background: #7aa2ff; border-radius: 999px; }
+
 .header {
   display: flex;
   align-items: center;

@@ -94,10 +94,9 @@ function buildMenu(locale: 'en' | 'ru' | 'uk') {
     { label: 'Actions', submenu: [
       { label: 'Clear input', click: () => { win?.webContents.send('clear-input'); fs.unlink(getBufferPath()).catch(() => {}) } },
       { label: 'Clear all data', click: async () => {
-          try { win?.webContents.send('clear-all') } catch {}
-          try { await fs.unlink(getBufferPath()) } catch {}
-        }
-      },
+          win?.webContents.send('clear-all')
+          await fs.unlink(getBufferPath()).catch(() => undefined)
+        } },
       { label: 'Open data folder', click: () => { shell.openPath(app.getPath('userData')) } },
       { role: 'reload', label: 'Restart' }
     ] }
@@ -151,13 +150,11 @@ function createWindow() {
   // Persist big textarea buffer to disk and restore on load
   const bufferPath = getBufferPath()
   ipcMain.on('save-buffer', async (_evt, text: string) => {
-    try { await fs.writeFile(bufferPath, text ?? '', 'utf8') } catch {}
+    await fs.writeFile(bufferPath, text ?? '', 'utf8').catch(() => undefined)
   })
   win.webContents.on('did-finish-load', async () => {
-    try {
-      const data = await fs.readFile(bufferPath, 'utf8')
-      if (data) win?.webContents.send('load-buffer', data)
-    } catch {}
+    const data = await fs.readFile(bufferPath, 'utf8').catch(() => undefined as unknown as string)
+    if (typeof data === 'string' && data) win?.webContents.send('load-buffer', data)
   })
 
   // Fix title
@@ -189,10 +186,10 @@ app.on('activate', () => {
 
 // Ensure buffer is removed on app exit so the input is cleared next launch
 app.on('before-quit', async () => {
-  try { await fs.unlink(getBufferPath()) } catch {}
+  await fs.unlink(getBufferPath()).catch(() => undefined)
   const base = app.getPath('userData')
-  try { await fs.rm(path.join(base, 'Local Storage'), { recursive: true, force: true }) } catch {}
-  try { await fs.rm(path.join(base, 'IndexedDB'), { recursive: true, force: true }) } catch {}
+  await fs.rm(path.join(base, 'Local Storage'), { recursive: true, force: true }).catch(() => undefined)
+  await fs.rm(path.join(base, 'IndexedDB'), { recursive: true, force: true }).catch(() => undefined)
 })
 
 app.whenReady().then(createWindow)

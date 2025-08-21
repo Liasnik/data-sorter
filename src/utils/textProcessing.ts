@@ -78,18 +78,39 @@ export function replaceValuesCaseSensitive(lines: string[], keywords: string[], 
   );
 }
 
-export function replaceValuesUpperCase(lines: string[], keywords: string[], replacements: string[]): string[] {
+export function replaceValuesCaseInsensitive(lines: string[], keywords: string[], replacements: string[]): string[] {
   if (keywords.length !== replacements.length) {
     throw new Error('differentCountError');
   }
   if (!lines.length || !keywords.length) return [...lines];
   const map = new Map<string, string>();
-  for (let i = 0; i < keywords.length; i++) map.set(keywords[i].toUpperCase(), replacements[i]);
-  const pattern = new RegExp(`(?:${joinEscaped(keywords.map(k => k.toUpperCase()))})(?=[\t ])`, 'g');
+  for (let i = 0; i < keywords.length; i++) map.set(keywords[i].toLowerCase(), replacements[i]);
+  // left boundary: start or space/tab; right boundary: space/tab or end
+  const pattern = new RegExp(`(^|[\t ])((?:${joinEscaped(keywords)}))(?=(?:[\t ]|$))`, 'gi');
   return lines.map(line =>
-    line.toUpperCase().replace(pattern, (matched) => {
-      const rep = map.get(matched);
-      return rep !== undefined ? rep : matched;
+    line.replace(pattern, (_full, left: string, word: string) => {
+      const rep = map.get(word.toLowerCase());
+      return left + (rep !== undefined ? rep : word);
+    })
+  );
+}
+
+export function replaceValuesUpperCase(lines: string[], keywords: string[], replacements: string[]): string[] {
+  // If no keywords OR no replacements provided, just uppercase entire lines
+  if (!keywords.length || !replacements.length) {
+    return lines.map(line => line.toUpperCase());
+  }
+  if (keywords.length !== replacements.length) {
+    throw new Error('differentCountError');
+  }
+  if (!lines.length || !keywords.length) return [...lines];
+  const map = new Map<string, string>();
+  for (let i = 0; i < keywords.length; i++) map.set(keywords[i].toUpperCase(), replacements[i].toUpperCase());
+  const pattern = new RegExp(`(^|[\t ])((?:${joinEscaped(keywords.map(k => k.toUpperCase()))}))(?=(?:[\t ]|$))`, 'g');
+  return lines.map(line =>
+    line.toUpperCase().replace(pattern, (_full, left: string, word: string) => {
+      const rep = map.get(word);
+      return left + (rep !== undefined ? rep : word);
     })
   );
 }
@@ -119,6 +140,7 @@ function buildRegexChunks(
     const pattern = wrapper ? wrapper.replace('{kw}', body) : `(?:${body})`;
     chunks.push(new RegExp(pattern, caseInsensitive ? 'i' : ''));
   }
+
   return chunks;
 }
 

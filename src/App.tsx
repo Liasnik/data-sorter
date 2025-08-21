@@ -4,6 +4,7 @@ import { FixedSizeList as List, ListChildComponentProps, type FixedSizeListProps
 import './App.css'
 import { copyTextToClipboard } from './utils/clipboard'
 import { CopyIcon, ClearIcon } from './components/Icons'
+import { TopControls } from './components/TopControls'
 import { createTranslator, resolveDefaultLocale, Locale } from './i18n'
 import { readFileAsText } from './utils/fileImport'
 
@@ -226,7 +227,7 @@ function App() {
   }
 
   const onClearAll = () => {
-    try { localStorage.removeItem('key') } catch {}
+    localStorage.removeItem('key')
     setKeywordsInput('')
     setReplacementsInput('')
     setIncomingBuffer('')
@@ -299,6 +300,8 @@ function App() {
     )
   }
 
+  // moved top controls into components/TopControls
+
   // Dynamic labels per panel (avoid misleading when only one panel updates)
   type LabelMode = 'withKeywords' | 'withoutKeywords' | 'withoutDuplicates' | 'duplicates'
   const [leftLabelMode, setLeftLabelMode] = useState<LabelMode>('withKeywords')
@@ -323,6 +326,7 @@ function App() {
 
   return (
     <div className="container">
+      <TopControls locale={locale} onSelectLocale={setLocale} theme={theme} onSelectTheme={setTheme} />
       <section className="panel">
         <div className="field-group">
           <div className="label-row">
