@@ -350,7 +350,7 @@ function App() {
                   tabIndex={0}
                   onClick={() => setKeywordsInput('')}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setKeywordsInput('') } }}
-                  style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                  style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)' }}
                 >
                   <ClearIcon />
                 </span>

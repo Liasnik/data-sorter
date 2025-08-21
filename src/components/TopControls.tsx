@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Locale } from '../i18n'
+import { SunIcon, MoonIcon } from './Icons'
 
 type Theme = 'system' | 'light' | 'dark'
 
@@ -37,7 +38,7 @@ function LanguageMenu({ locale, onSelect }: { locale: Locale; onSelect: (l: Loca
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
-  const label = locale === 'en' ? 'en' : locale === 'ru' ? 'ru' : 'uk'
+  const label = locale === 'en' ? 'en' : locale === 'ru' ? 'ru' : 'ua'
   return (
     <div ref={wrapRef} className="top-dd">
       <button className="top-dd-trigger" onClick={() => setOpen(v => !v)} aria-haspopup="listbox" aria-expanded={open}>{label}</button>
@@ -63,10 +64,10 @@ function ThemeMenu({ theme, effectiveTheme, onSelect }: { theme: Theme; effectiv
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
-  const icon = effectiveTheme === 'light' ? '☀' : '🌙'
+  const icon = effectiveTheme === 'light' ? <SunIcon width={14} height={14} /> : <MoonIcon width={12} height={12} />
   return (
     <div ref={wrapRef} className="top-dd">
-      <button className="top-dd-trigger" onClick={() => setOpen(v => !v)} aria-haspopup="listbox" aria-expanded={open} title="Theme">{icon}</button>
+      <button className="top-dd-trigger top-dd-trigger-theme" onClick={() => setOpen(v => !v)} aria-haspopup="listbox" aria-expanded={open} title="Theme">{icon}</button>
       {open && (
         <div className="top-dd-menu" role="listbox">
           <MenuItem active={theme==='system'} onClick={() => { onSelect('system'); setOpen(false) }}>System</MenuItem>
@@ -81,7 +82,6 @@ function ThemeMenu({ theme, effectiveTheme, onSelect }: { theme: Theme; effectiv
 function MenuItem({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button className={`top-dd-item${active ? ' active' : ''}`} onClick={onClick} role="option" aria-selected={active}>
-      {/* <span className={`radio-dot${active ? ' checked' : ''}`} aria-hidden="true" /> */}
       <span>{children}</span>
     </button>
   )
