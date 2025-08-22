@@ -27,7 +27,7 @@ export function useTextProcessing({ getInput, getKeywords, getReplacements, t }:
   const pendingRef = useRef<Map<string, (result: WorkerResult) => void>>(new Map())
   const reqIdRef = useRef<number>(0)
 
-  // Инициализация Worker'а
+  // initialization of Worker
   useEffect(() => {
     const worker = new Worker(new URL('../workers/textWorker.ts', import.meta.url), { type: 'module' })
     workerRef.current = worker
@@ -57,7 +57,7 @@ export function useTextProcessing({ getInput, getKeywords, getReplacements, t }:
     })
   }, [])
 
-  // Функции-обработчики без параметров (для передачи в компоненты)
+  // Handler functions without parameters (for passing to components)
   const handleSplitTwoAreas = useCallback(async () => {
     const result = await callWorker({ type: 'splitTwo', input: getInput(), keywords: getKeywords() })
     if (result?.ok) {
@@ -168,13 +168,13 @@ export function useTextProcessing({ getInput, getKeywords, getReplacements, t }:
   }, [])
 
   return {
-    // Состояния
+    // States
     withKeywords,
     withoutKeywords,
     leftLabelMode,
     rightLabelMode,
     
-    // Действия
+    // Actions
     handleSplitTwoAreas,
     handleStrictBegin,
     handleStrictInner,

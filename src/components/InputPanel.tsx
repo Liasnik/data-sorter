@@ -110,6 +110,10 @@ export function InputPanel({
         <div
           id="incoming-list"
           className="textarea"
+          tabIndex={0}
+          role="textbox"
+          aria-multiline="true"
+          aria-label={t('pasteListHere')}
           style={{ padding: 8 }}
           onPaste={(e) => {
             e.preventDefault()

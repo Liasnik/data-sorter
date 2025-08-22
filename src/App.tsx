@@ -25,7 +25,6 @@ function App() {
     return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
   })
 
-  // Используем кастомный хук для обработки текста
   const {
     withKeywords,
     withoutKeywords,
@@ -50,7 +49,6 @@ function App() {
     t,
   })
 
-  // Clear functions
   const onClearAll = useCallback(() => {
     localStorage.removeItem('key')
     setKeywordsInput('')
@@ -199,8 +197,7 @@ function App() {
 
   return (
     <div className="container">
-      <TopControls locale={locale} onSelectLocale={setLocale} theme={theme} onSelectTheme={setTheme} />
-     
+      <TopControls locale={locale} onSelectLocale={setLocale} theme={theme} onSelectTheme={setTheme} />    
       <KeywordsPanel
         keywordsInput={keywordsInput}
         setKeywordsInput={setKeywordsInput}
@@ -212,7 +209,6 @@ function App() {
         onReplaceUpper={handleReplaceUpper}
         t={t}
       />
-
       <section className="grid">
         <InputPanel
           incomingBuffer={incomingBuffer}
@@ -223,7 +219,6 @@ function App() {
           incomingCount={incomingCount}
           t={t}
         />
-
         <ActionsPanel
           onSplitTwoAreas={handleSplitTwoAreas}
           onStrictBegin={handleStrictBegin}
@@ -232,7 +227,6 @@ function App() {
           onDeduplicate={handleDeduplicate}
           t={t}
         />
-
         <OutputPanel
           className="gridItem-with"
           label={leftLabel}
@@ -244,7 +238,6 @@ function App() {
           onActionButtonClick={handleCreateWithKeywords}
           t={t as (key: 'copyTooltip' | 'copied') => string}
         />
-
         <OutputPanel
           className="gridItem-without"
           label={rightLabel}
