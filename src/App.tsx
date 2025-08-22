@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ComponentType } from 'react'
-import { FixedSizeList as List, ListChildComponentProps, type FixedSizeListProps } from 'react-window'
 import './App.css'
-import { copyTextToClipboard } from './utils/clipboard'
-import { CopyIcon, ClearIcon } from './components/Icons'
+import { ClearIcon } from './components/Icons'
 import { TopControls } from './components/TopControls'
 import { createTranslator, resolveDefaultLocale, Locale } from './i18n'
 import { readFileAsText } from './utils/fileImport'
+import { VirtualizedViewer } from './components/VirtualizedViewer'
+import { OutputPanel } from './components/OutputPanel'
+import { CopyWithToast } from './components/CopyWithToast'
 
 function App() {
   const [keywordsInput, setKeywordsInput] = useState<string>('')
@@ -27,7 +27,7 @@ function App() {
     | { type: 'createWith' | 'createWithout'; input: string; keywords: string }
     | { type: 'replace' | 'replaceUpper'; input: string; keywords: string; replacements: string }
     | { type: 'dedup'; input: string }
-  const pendingRef = useRef<Map<string, (res: WorkerResult) => void>>(new Map())
+  const pendingRef = useRef<Map<string, (result: WorkerResult) => void>>(new Map())
   const reqIdRef = useRef<number>(0)
   const [locale, setLocale] = useState<Locale>(resolveDefaultLocale())
   const t = useMemo(() => createTranslator(locale), [locale])
@@ -145,18 +145,18 @@ function App() {
 
   // init worker
   useEffect(() => {
-    const w = new Worker(new URL('./workers/textWorker.ts', import.meta.url), { type: 'module' })
-    workerRef.current = w
+    const worker = new Worker(new URL('./workers/textWorker.ts', import.meta.url), { type: 'module' })
+    workerRef.current = worker
     const localPending = pendingRef.current
-    w.onmessage = (e: MessageEvent<WorkerResult>) => {
-      const { id } = e.data || { id: '' }
-      const cb = localPending.get(String(id))
-      if (cb) {
+    worker.onmessage = (messageEvent: MessageEvent<WorkerResult>) => {
+      const { id } = messageEvent.data || { id: '' }
+      const pendingPromiseResolver = localPending.get(String(id))
+      if (pendingPromiseResolver) {
         localPending.delete(String(id))
-        cb(e.data)
+        pendingPromiseResolver(messageEvent.data)
       }
     }
-    return () => { w.terminate(); workerRef.current = null; localPending.clear() }
+    return () => { worker.terminate(); workerRef.current = null; localPending.clear() }
   }, [])
 
   function callWorker(payload: WorkerAction): Promise<WorkerResult> {
@@ -169,58 +169,58 @@ function App() {
 
   const handleSplitTwoAreas = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'splitTwo', input, keywords: debouncedKeywords || keywordsInput })
-    if (res?.ok) { setWithKeywords(res.with || ''); setWithoutKeywords(res.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
+    const result = await callWorker({ type: 'splitTwo', input, keywords: debouncedKeywords || keywordsInput })
+    if (result?.ok) { setWithKeywords(result.with || ''); setWithoutKeywords(result.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
   }
 
   const handleStrictBegin = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'strictBegin', input, keywords: debouncedKeywords || keywordsInput })
-    if (res?.ok) { setWithKeywords(res.with || ''); setWithoutKeywords(res.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
+    const result = await callWorker({ type: 'strictBegin', input, keywords: debouncedKeywords || keywordsInput })
+    if (result?.ok) { setWithKeywords(result.with || ''); setWithoutKeywords(result.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
   }
 
   const handleStrictInner = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'strictInner', input, keywords: debouncedKeywords || keywordsInput })
-    if (res?.ok) { setWithKeywords(res.with || ''); setWithoutKeywords(res.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
+    const result = await callWorker({ type: 'strictInner', input, keywords: debouncedKeywords || keywordsInput })
+    if (result?.ok) { setWithKeywords(result.with || ''); setWithoutKeywords(result.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
   }
 
   const handleStrictEnd = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'strictEnd', input, keywords: debouncedKeywords || keywordsInput })
-    if (res?.ok) { setWithKeywords(res.with || ''); setWithoutKeywords(res.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
+    const result = await callWorker({ type: 'strictEnd', input, keywords: debouncedKeywords || keywordsInput })
+    if (result?.ok) { setWithKeywords(result.with || ''); setWithoutKeywords(result.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
   }
 
   const handleCreateWithKeywords = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'createWith', input, keywords: debouncedKeywords || keywordsInput })
-    if (res?.ok) { setWithKeywords(res.with || ''); setLeftLabelMode('withKeywords') }
+    const result = await callWorker({ type: 'createWith', input, keywords: debouncedKeywords || keywordsInput })
+    if (result?.ok) { setWithKeywords(result.with || ''); setLeftLabelMode('withKeywords') }
   }
 
   const handleCreateWithoutKeywords = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'createWithout', input, keywords: debouncedKeywords || keywordsInput })
-    if (res?.ok) { setWithoutKeywords(res.without || ''); setRightLabelMode('withoutKeywords') }
+    const result = await callWorker({ type: 'createWithout', input, keywords: debouncedKeywords || keywordsInput })
+    if (result?.ok) { setWithoutKeywords(result.without || ''); setRightLabelMode('withoutKeywords') }
   }
 
   const handleReplace = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'replace', input, keywords: debouncedKeywords || keywordsInput, replacements: debouncedReplacements || replacementsInput })
-    if (res?.ok) { setWithKeywords(res.with || ''); setLeftLabelMode('withKeywords') } else { alert(t('replacementError')) }
+    const result = await callWorker({ type: 'replace', input, keywords: debouncedKeywords || keywordsInput, replacements: debouncedReplacements || replacementsInput })
+    if (result?.ok) { setWithKeywords(result.with || ''); setLeftLabelMode('withKeywords') } else { alert(t('replacementError')) }
   }
 
   const handleReplaceUpper = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'replaceUpper', input, keywords: debouncedKeywords || keywordsInput, replacements: debouncedReplacements || replacementsInput })
-    if (res?.ok) { setWithKeywords(res.with || ''); setLeftLabelMode('withKeywords') } else { alert(t('replacementError')) }
+    const result = await callWorker({ type: 'replaceUpper', input, keywords: debouncedKeywords || keywordsInput, replacements: debouncedReplacements || replacementsInput })
+    if (result?.ok) { setWithKeywords(result.with || ''); setLeftLabelMode('withKeywords') } else { alert(t('replacementError')) }
   }
 
   const handleDeduplicate = async () => {
     const input = incomingBufferRef.current || ''
-    const res = await callWorker({ type: 'dedup', input })
-    if (res?.ok) {
-      setWithKeywords(res.with || '')
-      setWithoutKeywords(res.without || '')
+    const result = await callWorker({ type: 'dedup', input })
+    if (result?.ok) {
+      setWithKeywords(result.with || '')
+      setWithoutKeywords(result.without || '')
       setLeftLabelMode('withoutDuplicates')
       setRightLabelMode('duplicates')
     }
@@ -257,64 +257,8 @@ function App() {
   const withCount = useMemo(() => countLines(withKeywords), [withKeywords])
   const withoutCount = useMemo(() => countLines(withoutKeywords), [withoutKeywords])
 
-  function VirtualizedViewer({ value }: { value: string }) {
-    const lines = useMemo(() => (value ? value.split('\n') : []), [value])
-    const itemSize = 20
-    const [height, setHeight] = useState(240)
-    const containerRef = useRef<HTMLDivElement | null>(null)
-
-    useEffect(() => {
-      const containerElement = containerRef.current
-      if (!containerElement) return
-      const resizeObserver = new ResizeObserver(resizeObserverEntries => {
-        for (const resizeObserverEntry of resizeObserverEntries) {
-          const observedHeight = Math.max(0, Math.floor(resizeObserverEntry.contentRect.height))
-          if (observedHeight !== height) setHeight(observedHeight)
-        }
-      })
-      resizeObserver.observe(containerElement)
-      return () => resizeObserver.disconnect()
-    }, [height])
-    
-
-    const Row = ({ index, style }: ListChildComponentProps) => (
-      <div style={{ ...style, width: 'auto', right: 'auto', whiteSpace: 'pre' }}>{lines[index]}</div>
-    )
-    const VList = List as unknown as ComponentType<FixedSizeListProps>
-    return (
-      <div className="virtual-list" ref={containerRef} style={{ width: '100%' }}>
-        <VList className="virtual-scroll" height={height} itemCount={lines.length} itemSize={itemSize} width={'100%'}>
-          {Row}
-        </VList>
-      </div>
-    )
-  }
-
   // Reusable copy with toast (no querySelector, uses state)
-  function CopyWithToast({ getText }: { getText: () => string }) {
-    const [phase, setPhase] = useState<'idle' | 'show' | 'leave'>('idle')
-    const timersRef = useRef<number[]>([])
-    const clearTimers = () => { timersRef.current.forEach(id => window.clearTimeout(id)); timersRef.current = [] }
-    const show = () => {
-      clearTimers()
-      setPhase('show')
-      timersRef.current.push(window.setTimeout(() => setPhase('leave'), 400))
-      timersRef.current.push(window.setTimeout(() => setPhase('idle'), 600))
-    }
-    const onCopy = async () => { await copyTextToClipboard(getText()); show() }
-    const onKey = async (e: React.KeyboardEvent<HTMLSpanElement>) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); await onCopy() }
-    }
-    useEffect(() => () => clearTimers(), [])
-    return (
-      <span style={{ position: 'relative', display: 'inline-flex' }}>
-        <span className="copy-icon" role="button" tabIndex={0} aria-label={t('copyTooltip')} title={t('copyTooltip')} onClick={onCopy} onKeyDown={onKey}>
-          <CopyIcon />
-        </span>
-        <span className={`copied-toast${phase === 'show' ? ' show' : ''}${phase === 'leave' ? ' leave' : ''}`}>{t('copied')}</span>
-      </span>
-    )
-  }
+  // MOVED to components/CopyWithToast.tsx
 
   // moved top controls into components/TopControls
 
@@ -444,7 +388,7 @@ function App() {
                 {incomingCount > 0 && (
                   <>
                   <span className="line-count" >{incomingCount}</span>
-                  <CopyWithToast getText={() => incomingBufferRef.current || incomingBuffer || ''} />
+                  <CopyWithToast getText={() => incomingBufferRef.current || incomingBuffer || ''} t={t} />
                   </>
                 )}
               </div>
@@ -533,71 +477,29 @@ function App() {
           </div>
         </div>
 
-        <div className="card gridItem-with">
-          <div className="field-group">
-            <div className="label-row line-count">
-              <div className="field-actions">
-              <label htmlFor="with-keywords" className="label">{leftLabel}</label>
-                {withCount > 0 && (
-                  <>
-                   <span className="line-count">{withCount}</span>
-                   <CopyWithToast getText={() => withKeywords} />
-                  </>
-                )}
-              </div>
-                {withKeywords && (
-                  <span
-                    className="clear-icon"
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Clear"
-                    title="Clear"
-                    onClick={() => setWithKeywords('')}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setWithKeywords('') } }}
-                  >
-                    <ClearIcon />
-                  </span>
-                )}
-            </div>
-            <VirtualizedViewer value={withKeywords} />
-          </div>
-          <div className="actions">
-            <button className="btn" type="button" onClick={handleCreateWithKeywords}>{t('withKeywordsBtn')}</button>
-          </div>
-      </div>
+        <OutputPanel
+          className="gridItem-with"
+          label={leftLabel}
+          htmlFor="with-keywords"
+          value={withKeywords}
+          count={withCount}
+          onClear={() => setWithKeywords('')}
+          actionButtonText={t('withKeywordsBtn')}
+          onActionButtonClick={handleCreateWithKeywords}
+          t={t as (key: 'copyTooltip' | 'copied') => string}
+        />
 
-        <div className="card gridItem-without">
-          <div className="field-group">
-            <div className="label-row line-count">
-              <div className="field-actions">
-              <label htmlFor="without-keywords" className="label">{rightLabel}</label>
-                {withoutCount > 0 && (
-                  <>
-                   <span className="line-count">{withoutCount}</span>
-                   <CopyWithToast getText={() => withoutKeywords} />
-                  </>
-                )}
-              </div>
-                {withoutKeywords && (
-                  <span
-                    className="clear-icon"
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Clear"
-                    title="Clear"
-                    onClick={() => setWithoutKeywords('')}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setWithoutKeywords('') } }}
-                  >
-                    <ClearIcon />
-                  </span>
-                )}
-            </div>
-            <VirtualizedViewer value={withoutKeywords} />
-          </div>
-          <div className="actions">
-            <button className="btn" type="button" onClick={handleCreateWithoutKeywords}>{t('withoutKeywordsBtn')}</button>
-          </div>
-        </div>
+        <OutputPanel
+          className="gridItem-without"
+          label={rightLabel}
+          htmlFor="without-keywords"
+          value={withoutKeywords}
+          count={withoutCount}
+          onClear={() => setWithoutKeywords('')}
+          actionButtonText={t('withoutKeywordsBtn')}
+          onActionButtonClick={handleCreateWithoutKeywords}
+          t={t as (key: 'copyTooltip' | 'copied') => string}
+        />
       </section>
       </div>
   )

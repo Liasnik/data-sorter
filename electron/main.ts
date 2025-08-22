@@ -103,7 +103,7 @@ function buildMenu(locale: 'en' | 'ru' | 'uk') {
   ]
   return template
 }
-const APP_TITLE = 'Sorter9'
+const APP_TITLE = 'Sorter'
 
 function createWindow() {
   win = new BrowserWindow({
