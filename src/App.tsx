@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import './App.css'
 import { TopControls } from './components/TopControls'
 import { createTranslator, resolveDefaultLocale, Locale } from './i18n'
@@ -6,34 +6,67 @@ import { OutputPanel } from './components/OutputPanel'
 import { ActionsPanel } from './components/ActionsPanel'
 import { InputPanel } from './components/InputPanel'
 import { KeywordsPanel } from './components/KeywordsPanel'
+import { countLines } from './utils/countLines'
+import { useTextProcessing } from './hooks/useTextProcessing'
 
 function App() {
   const [keywordsInput, setKeywordsInput] = useState<string>('')
   const [replacementsInput, setReplacementsInput] = useState<string>('')
-  // const incomingRef = useRef<HTMLTextAreaElement | null>(null)
-  const [withKeywords, setWithKeywords] = useState<string>('')
-  const [withoutKeywords, setWithoutKeywords] = useState<string>('')
   const [incomingBuffer, setIncomingBuffer] = useState<string>('')
   const [incomingHasValue, setIncomingHasValue] = useState<boolean>(false)
   const [debouncedKeywords, setDebouncedKeywords] = useState<string>('')
   const [debouncedReplacements, setDebouncedReplacements] = useState<string>('')
-  const workerRef = useRef<Worker | null>(null)
+  
   const incomingBufferRef = useRef<string>('')
-  type WorkerResult = { id: string; ok: boolean; with?: string; without?: string; error?: string }
-  type WorkerAction =
-    | { type: 'splitTwo'; input: string; keywords: string }
-    | { type: 'strictBegin' | 'strictInner' | 'strictEnd'; input: string; keywords: string }
-    | { type: 'createWith' | 'createWithout'; input: string; keywords: string }
-    | { type: 'replace' | 'replaceUpper'; input: string; keywords: string; replacements: string }
-    | { type: 'dedup'; input: string }
-  const pendingRef = useRef<Map<string, (result: WorkerResult) => void>>(new Map())
-  const reqIdRef = useRef<number>(0)
   const [locale, setLocale] = useState<Locale>(resolveDefaultLocale())
   const t = useMemo(() => createTranslator(locale), [locale])
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>(() => {
     const stored = localStorage.getItem('theme')
     return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
   })
+
+  // Используем кастомный хук для обработки текста
+  const {
+    withKeywords,
+    withoutKeywords,
+    leftLabelMode,
+    rightLabelMode,
+    handleSplitTwoAreas,
+    handleStrictBegin,
+    handleStrictInner,
+    handleStrictEnd,
+    handleCreateWithKeywords,
+    handleCreateWithoutKeywords,
+    handleReplace,
+    handleReplaceUpper,
+    handleDeduplicate,
+    clearResults,
+    clearWithKeywords,
+    clearWithoutKeywords,
+  } = useTextProcessing({
+    getInput: () => incomingBufferRef.current || '',
+    getKeywords: () => debouncedKeywords || keywordsInput,
+    getReplacements: () => debouncedReplacements || replacementsInput,
+    t,
+  })
+
+  // Clear functions
+  const onClearAll = useCallback(() => {
+    localStorage.removeItem('key')
+    setKeywordsInput('')
+    setReplacementsInput('')
+    setIncomingBuffer('')
+    incomingBufferRef.current = ''
+    setIncomingHasValue(false)
+    clearResults()
+  }, [clearResults])
+
+  const handleClearLists = useCallback(() => {
+    setIncomingBuffer('')
+    incomingBufferRef.current = ''
+    setIncomingHasValue(false)
+    clearResults()
+  }, [clearResults])
 
   useEffect(() => {
     const savedKeywords = localStorage.getItem('key')
@@ -90,8 +123,7 @@ function App() {
     }
     anyWindow.ipcRenderer?.on('set-theme', onTheme)
     anyWindow.ipcRenderer?.on('set-locale', onLocale)
-    // clear-all: handled by shared onClearAll()
-    // buffer load / clear
+    
     const onLoad = (...args: unknown[]) => {
       const data = args[1]
       if (typeof data === 'string') {
@@ -108,6 +140,7 @@ function App() {
     anyWindow.ipcRenderer?.on('load-buffer', onLoad)
     anyWindow.ipcRenderer?.on('clear-input', onClear)
     anyWindow.ipcRenderer?.on('clear-all', onClearAll)
+    
     return () => {
       anyWindow.ipcRenderer?.off('set-theme', onTheme)
       anyWindow.ipcRenderer?.off('set-locale', onLocale)
@@ -115,7 +148,7 @@ function App() {
       anyWindow.ipcRenderer?.off('clear-input', onClear)
       anyWindow.ipcRenderer?.off('clear-all', onClearAll)
     }
-  }, [])
+  }, [onClearAll])
 
   // Persist buffer periodically and on unload (best-effort)
   useEffect(() => {
@@ -142,124 +175,9 @@ function App() {
     }
   }, [])
 
-  // init worker
-  useEffect(() => {
-    const worker = new Worker(new URL('./workers/textWorker.ts', import.meta.url), { type: 'module' })
-    workerRef.current = worker
-    const localPending = pendingRef.current
-    worker.onmessage = (messageEvent: MessageEvent<WorkerResult>) => {
-      const { id } = messageEvent.data || { id: '' }
-      const pendingPromiseResolver = localPending.get(String(id))
-      if (pendingPromiseResolver) {
-        localPending.delete(String(id))
-        pendingPromiseResolver(messageEvent.data)
-      }
-    }
-    return () => { worker.terminate(); workerRef.current = null; localPending.clear() }
-  }, [])
-
-  function callWorker(payload: WorkerAction): Promise<WorkerResult> {
-    const id = String(++reqIdRef.current)
-    return new Promise<WorkerResult>((resolve) => {
-      pendingRef.current.set(id, resolve)
-      workerRef.current?.postMessage({ id, ...payload })
-    })
-  }
-
-  const handleSplitTwoAreas = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'splitTwo', input, keywords: debouncedKeywords || keywordsInput })
-    if (result?.ok) { setWithKeywords(result.with || ''); setWithoutKeywords(result.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
-  }
-
-  const handleStrictBegin = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'strictBegin', input, keywords: debouncedKeywords || keywordsInput })
-    if (result?.ok) { setWithKeywords(result.with || ''); setWithoutKeywords(result.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
-  }
-
-  const handleStrictInner = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'strictInner', input, keywords: debouncedKeywords || keywordsInput })
-    if (result?.ok) { setWithKeywords(result.with || ''); setWithoutKeywords(result.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
-  }
-
-  const handleStrictEnd = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'strictEnd', input, keywords: debouncedKeywords || keywordsInput })
-    if (result?.ok) { setWithKeywords(result.with || ''); setWithoutKeywords(result.without || ''); setLeftLabelMode('withKeywords'); setRightLabelMode('withoutKeywords') }
-  }
-
-  const handleCreateWithKeywords = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'createWith', input, keywords: debouncedKeywords || keywordsInput })
-    if (result?.ok) { setWithKeywords(result.with || ''); setLeftLabelMode('withKeywords') }
-  }
-
-  const handleCreateWithoutKeywords = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'createWithout', input, keywords: debouncedKeywords || keywordsInput })
-    if (result?.ok) { setWithoutKeywords(result.without || ''); setRightLabelMode('withoutKeywords') }
-  }
-
-  const handleReplace = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'replace', input, keywords: debouncedKeywords || keywordsInput, replacements: debouncedReplacements || replacementsInput })
-    if (result?.ok) { setWithKeywords(result.with || ''); setLeftLabelMode('withKeywords') } else { alert(t('replacementError')) }
-  }
-
-  const handleReplaceUpper = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'replaceUpper', input, keywords: debouncedKeywords || keywordsInput, replacements: debouncedReplacements || replacementsInput })
-    if (result?.ok) { setWithKeywords(result.with || ''); setLeftLabelMode('withKeywords') } else { alert(t('replacementError')) }
-  }
-
-  const handleDeduplicate = async () => {
-    const input = incomingBufferRef.current || ''
-    const result = await callWorker({ type: 'dedup', input })
-    if (result?.ok) {
-      setWithKeywords(result.with || '')
-      setWithoutKeywords(result.without || '')
-      setLeftLabelMode('withoutDuplicates')
-      setRightLabelMode('duplicates')
-    }
-  }
-
-  const onClearAll = () => {
-    localStorage.removeItem('key')
-    setKeywordsInput('')
-    setReplacementsInput('')
-    setIncomingBuffer('')
-    incomingBufferRef.current = ''
-    setIncomingHasValue(false)
-    setWithKeywords('')
-    setWithoutKeywords('')
-  }
-
-  const handleClearLists = () => {
-    setIncomingBuffer('')
-    incomingBufferRef.current = ''
-    setIncomingHasValue(false)
-    setWithKeywords('')
-    setWithoutKeywords('')
-  }
-
-  // Virtualized viewer for big outputs (keeps copy/clear actions on container)
-  function countLines(text: string): number {
-    if (!text) return 0
-    let count = 1
-    for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 10) count++
-    return count
-  }
-
   const incomingCount = useMemo(() => countLines(incomingBuffer), [incomingBuffer])
   const withCount = useMemo(() => countLines(withKeywords), [withKeywords])
   const withoutCount = useMemo(() => countLines(withoutKeywords), [withoutKeywords])
-
-  // Dynamic labels per panel (avoid misleading when only one panel updates)
-  type LabelMode = 'withKeywords' | 'withoutKeywords' | 'withoutDuplicates' | 'duplicates'
-  const [leftLabelMode, setLeftLabelMode] = useState<LabelMode>('withKeywords')
-  const [rightLabelMode, setRightLabelMode] = useState<LabelMode>('withoutKeywords')
 
   const leftLabel = useMemo(() => {
     switch (leftLabelMode) {
@@ -269,6 +187,7 @@ function App() {
       case 'duplicates': return t('duplicates')
     }
   }, [leftLabelMode, t])
+  
   const rightLabel = useMemo(() => {
     switch (rightLabelMode) {
       case 'withKeywords': return t('dataWithKeywords')
@@ -320,7 +239,7 @@ function App() {
           htmlFor="with-keywords"
           value={withKeywords}
           count={withCount}
-          onClear={() => setWithKeywords('')}
+          onClear={clearWithKeywords}
           actionButtonText={t('withKeywordsBtn')}
           onActionButtonClick={handleCreateWithKeywords}
           t={t as (key: 'copyTooltip' | 'copied') => string}
@@ -332,13 +251,13 @@ function App() {
           htmlFor="without-keywords"
           value={withoutKeywords}
           count={withoutCount}
-          onClear={() => setWithoutKeywords('')}
+          onClear={clearWithoutKeywords}
           actionButtonText={t('withoutKeywordsBtn')}
           onActionButtonClick={handleCreateWithoutKeywords}
           t={t as (key: 'copyTooltip' | 'copied') => string}
         />
       </section>
-      </div>
+    </div>
   )
 }
 
