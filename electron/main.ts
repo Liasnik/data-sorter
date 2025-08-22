@@ -117,6 +117,34 @@ function createWindow() {
   win.webContents.on('will-navigate', (e) => e.preventDefault())
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
 
+  // Add context menu for text inputs and areas
+  win.webContents.on('context-menu', (e, params) => {
+    const { x, y } = params
+    
+    // Get localized labels based on current locale
+    const getLabel = (key: string) => {
+      const labels: Record<string, Record<string, string>> = {
+        en: { undo: 'Undo', redo: 'Redo', cut: 'Cut', copy: 'Copy', paste: 'Paste', selectAll: 'Select All' },
+        ru: { undo: 'Отменить', redo: 'Повторить', cut: 'Вырезать', copy: 'Копировать', paste: 'Вставить', selectAll: 'Выбрать все' },
+        uk: { undo: 'Скасувати', redo: 'Повторити', cut: 'Вирізати', copy: 'Копіювати', paste: 'Вставити', selectAll: 'Вибрати все' }
+      }
+      return labels[currentLocale]?.[key] || labels.en[key] || key
+    }
+    
+    const template: Electron.MenuItemConstructorOptions[] = [
+      { role: 'undo', label: getLabel('undo') },
+      { role: 'redo', label: getLabel('redo') },
+      { type: 'separator' },
+      { role: 'cut', label: getLabel('cut') },
+      { role: 'copy', label: getLabel('copy') },
+      { role: 'paste', label: getLabel('paste') },
+      { role: 'selectAll', label: getLabel('selectAll') }
+    ]
+    
+    const menu = Menu.buildFromTemplate(template)
+    menu.popup({ x, y })
+  })
+
   // Apply application menu
   Menu.setApplicationMenu(Menu.buildFromTemplate(buildMenu(currentLocale)))
 

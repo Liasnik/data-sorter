@@ -374,7 +374,7 @@ function App() {
                   tabIndex={0}
                   onClick={() => setReplacementsInput('')}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setReplacementsInput('') } }}
-                  style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
+                  style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)' }}
                 >
                   <ClearIcon />
                 </span>
@@ -422,13 +422,15 @@ function App() {
               <button className="btn" type="button" onClick={() => document.getElementById('file-input')?.click()}>Import file (.xlsx, .xls, .csv, .txt)</button>
               <span className="hint">{t('importHint')}</span>
             </div>
-            <div className="label-row">
+            <div className="label-row line-count">
               <div className="field-actions">
                 <label htmlFor="incoming-list" className="label">{t('pasteListHere')}</label>
                 {incomingCount > 0 && (
+                  <>
                   <span className="line-count" >{incomingCount}</span>
+                  <CopyWithToast getText={() => incomingBufferRef.current || incomingBuffer || ''} />
+                  </>
                 )}
-                <CopyWithToast getText={() => incomingBufferRef.current || incomingBuffer || ''} />
               </div>
                 {incomingHasValue && (
                   <span
@@ -517,13 +519,15 @@ function App() {
 
         <div className="card gridItem-with">
           <div className="field-group">
-            <div className="label-row">
+            <div className="label-row line-count">
               <div className="field-actions">
               <label htmlFor="with-keywords" className="label">{leftLabel}</label>
                 {withCount > 0 && (
-                  <span className="line-count">{withCount}</span>
+                  <>
+                   <span className="line-count">{withCount}</span>
+                   <CopyWithToast getText={() => withKeywords} />
+                  </>
                 )}
-                <CopyWithToast getText={() => withKeywords} />
               </div>
                 {withKeywords && (
                   <span
@@ -548,13 +552,15 @@ function App() {
 
         <div className="card gridItem-without">
           <div className="field-group">
-            <div className="label-row">
+            <div className="label-row line-count">
               <div className="field-actions">
               <label htmlFor="without-keywords" className="label">{rightLabel}</label>
                 {withoutCount > 0 && (
-                  <span className="line-count">{withoutCount}</span>
+                  <>
+                   <span className="line-count">{withoutCount}</span>
+                   <CopyWithToast getText={() => withoutKeywords} />
+                  </>
                 )}
-                <CopyWithToast getText={() => withoutKeywords} />
               </div>
                 {withoutKeywords && (
                   <span

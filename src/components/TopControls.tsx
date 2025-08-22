@@ -20,7 +20,14 @@ export function TopControls({
     return theme === 'system' ? (systemDark ? 'dark' : 'light') : theme
   }, [theme])
   return (
-    <div className="top-controls" aria-label="Quick toggles">
+    <div 
+      className="top-controls" 
+      aria-label="Quick toggles"
+      onContextMenu={(e) => {
+        e.preventDefault()
+        // Electron will handle the context menu
+      }}
+    >
       <LanguageMenu locale={locale} onSelect={onSelectLocale} />
       <ThemeMenu theme={theme} effectiveTheme={effectiveTheme} onSelect={onSelectTheme} />
     </div>
@@ -41,7 +48,18 @@ function LanguageMenu({ locale, onSelect }: { locale: Locale; onSelect: (l: Loca
   const label = locale === 'en' ? 'en' : locale === 'ru' ? 'ru' : 'ua'
   return (
     <div ref={wrapRef} className="top-dd">
-      <button className="top-dd-trigger" onClick={() => setOpen(v => !v)} aria-haspopup="listbox" aria-expanded={open}>{label}</button>
+      <button 
+        className="top-dd-trigger" 
+        onClick={() => setOpen(v => !v)} 
+        aria-haspopup="listbox" 
+        aria-expanded={open}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          // Electron will handle the context menu
+        }}
+      >
+        {label}
+      </button>
       {open && (
         <div className="top-dd-menu" role="listbox">
           <MenuItem active={locale==='en'} onClick={() => { onSelect('en'); setOpen(false) }}>English</MenuItem>
@@ -67,7 +85,19 @@ function ThemeMenu({ theme, effectiveTheme, onSelect }: { theme: Theme; effectiv
   const icon = effectiveTheme === 'light' ? <SunIcon width={14} height={14} /> : <MoonIcon width={12} height={12} />
   return (
     <div ref={wrapRef} className="top-dd">
-      <button className="top-dd-trigger top-dd-trigger-theme" onClick={() => setOpen(v => !v)} aria-haspopup="listbox" aria-expanded={open} title="Theme">{icon}</button>
+      <button 
+        className="top-dd-trigger top-dd-trigger-theme" 
+        onClick={() => setOpen(v => !v)} 
+        aria-haspopup="listbox" 
+        aria-expanded={open} 
+        title="Theme"
+        onContextMenu={(e) => {
+          e.preventDefault()
+          // Electron will handle the context menu
+        }}
+      >
+        {icon}
+      </button>
       {open && (
         <div className="top-dd-menu" role="listbox">
           <MenuItem active={theme==='system'} onClick={() => { onSelect('system'); setOpen(false) }}>System</MenuItem>
@@ -81,7 +111,16 @@ function ThemeMenu({ theme, effectiveTheme, onSelect }: { theme: Theme; effectiv
 
 function MenuItem({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button className={`top-dd-item${active ? ' active' : ''}`} onClick={onClick} role="option" aria-selected={active}>
+    <button 
+      className={`top-dd-item${active ? ' active' : ''}`} 
+      onClick={onClick} 
+      role="option" 
+      aria-selected={active}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        // Electron will handle the context menu
+      }}
+    >
       <span>{children}</span>
     </button>
   )

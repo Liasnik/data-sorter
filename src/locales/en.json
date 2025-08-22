@@ -24,7 +24,13 @@
   "dataWithoutDuplicates": "Data without duplicates",
   "duplicates": "Duplicates",
   "deduplicate": "Remove duplicates",
-  "copied": "Copied"
+  "copied": "Copied",
+  "undo": "Undo",
+  "redo": "Redo",
+  "cut": "Cut",
+  "copy": "Copy",
+  "paste": "Paste",
+  "selectAll": "Select All"
 }
 
 
