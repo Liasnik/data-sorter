@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
-import { ClearIcon } from './components/Icons'
 import { TopControls } from './components/TopControls'
 import { createTranslator, resolveDefaultLocale, Locale } from './i18n'
-import { readFileAsText } from './utils/fileImport'
-import { VirtualizedViewer } from './components/VirtualizedViewer'
 import { OutputPanel } from './components/OutputPanel'
-import { CopyWithToast } from './components/CopyWithToast'
+import { ActionsPanel } from './components/ActionsPanel'
+import { InputPanel } from './components/InputPanel'
+import { KeywordsPanel } from './components/KeywordsPanel'
 
 function App() {
   const [keywordsInput, setKeywordsInput] = useState<string>('')
@@ -257,11 +256,6 @@ function App() {
   const withCount = useMemo(() => countLines(withKeywords), [withKeywords])
   const withoutCount = useMemo(() => countLines(withoutKeywords), [withoutKeywords])
 
-  // Reusable copy with toast (no querySelector, uses state)
-  // MOVED to components/CopyWithToast.tsx
-
-  // moved top controls into components/TopControls
-
   // Dynamic labels per panel (avoid misleading when only one panel updates)
   type LabelMode = 'withKeywords' | 'withoutKeywords' | 'withoutDuplicates' | 'duplicates'
   const [leftLabelMode, setLeftLabelMode] = useState<LabelMode>('withKeywords')
@@ -287,195 +281,38 @@ function App() {
   return (
     <div className="container">
       <TopControls locale={locale} onSelectLocale={setLocale} theme={theme} onSelectTheme={setTheme} />
-      <section className="panel">
-        <div className="field-group">
-          <div className="label-row">
-            <label htmlFor="input-keywords" className="label">{t('enterKeywordsLabel')}</label>
-          </div>
-          <div className="input-row">
-            <div style={{ position: 'relative', flex: 1 }}>
-              <input
-                id="input-keywords"
-                className="input"
-                type="text"
-                value={keywordsInput}
-                onChange={(e) => setKeywordsInput(e.target.value)}
-                placeholder={t('keywordsPlaceholder')}
-              />
-              {keywordsInput && (
-                <span
-                  className="clear-icon"
-                  title="Clear"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setKeywordsInput('')}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setKeywordsInput('') } }}
-                  style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)' }}
-                >
-                  <ClearIcon />
-                </span>
-              )}
-            </div>
-
-            <div style={{ position: 'relative', flex: 1 }}>
-              <input
-                id="input-replace"
-                className="input flex-1"
-                type="text"
-                value={replacementsInput}
-                onChange={(e) => setReplacementsInput(e.target.value)}
-                placeholder={t('replacementsPlaceholder')}
-              />
-              {replacementsInput && (
-                <span
-                  className="clear-icon"
-                  title="Clear"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setReplacementsInput('')}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setReplacementsInput('') } }}
-                  style={{ position: 'absolute', right: 2, top: '50%', transform: 'translateY(-50%)' }}
-                >
-                  <ClearIcon />
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="replace-row">
-        <div className="clear-buttons">
-          <button id="del" className="btn" type="button" onClick={handleClearLists}>{t('clearLists')}</button>
-          <button id="del" className="btn" type="button" onClick={onClearAll}>{t('clearAllData')}</button>
-        </div>
-          <div className="replace-row-buttons">
-          <button className="btn " type="button" onClick={handleReplace}>{t('replace')}</button>
-          <button className="btn" type="button" onClick={handleReplaceUpper}>{t('replaceUppercase')}</button>
-          </div>
-        </div>
-      </section>
+     
+      <KeywordsPanel
+        keywordsInput={keywordsInput}
+        setKeywordsInput={setKeywordsInput}
+        replacementsInput={replacementsInput}
+        setReplacementsInput={setReplacementsInput}
+        onClearLists={handleClearLists}
+        onClearAll={onClearAll}
+        onReplace={handleReplace}
+        onReplaceUpper={handleReplaceUpper}
+        t={t}
+      />
 
       <section className="grid">
-        <div className="card gridItem-input">
-          <div className="field-group">
-          <div className="import-row" onDragOver={(e) => { e.preventDefault(); }} onDrop={async (e) => {
-              e.preventDefault()
-              const file = e.dataTransfer.files?.[0]
-              if (file) {
-                try {
-                  const text = await readFileAsText(file)
-                  setIncomingBuffer(text)
-                  incomingBufferRef.current = text
-                  setIncomingHasValue(Boolean(text && text.length))
-                } catch {
-                  alert('Failed to import file')
-                }
-              } else {
-                const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text')
-                if (text) {
-                  setIncomingBuffer(text)
-                  incomingBufferRef.current = text
-                  setIncomingHasValue(Boolean(text && text.length))
-                }
-              }
-            }}>
-              <button className="btn" type="button" onClick={() => document.getElementById('file-input')?.click()}>Import file (.xlsx, .xls, .csv, .txt)</button>
-              <span className="hint">{t('importHint')}</span>
-            </div>
-            <div className="label-row line-count">
-              <div className="field-actions">
-                <label htmlFor="incoming-list" className="label">{t('pasteListHere')}</label>
-                {incomingCount > 0 && (
-                  <>
-                  <span className="line-count" >{incomingCount}</span>
-                  <CopyWithToast getText={() => incomingBufferRef.current || incomingBuffer || ''} t={t} />
-                  </>
-                )}
-              </div>
-                {incomingHasValue && (
-                  <span
-                    className="clear-icon"
-                    role="button"
-                    tabIndex={0}
-                    aria-label="Clear"
-                    title="Clear"
-                    onClick={() => { setIncomingBuffer(''); incomingBufferRef.current = ''; setIncomingHasValue(false) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIncomingBuffer(''); incomingBufferRef.current = ''; setIncomingHasValue(false) } }}
-                  >
-                    <ClearIcon />
-                  </span>
-                )}
-            </div>
-            <input id="file-input" type="file" accept=".xlsx,.xls,.csv,.txt" style={{ display: 'none' }} onChange={async (e) => {
-              const file = e.target.files?.[0]
-              if (!file) return
-              try {
-                const text = await readFileAsText(file)
-                setIncomingBuffer(text)
-                incomingBufferRef.current = text
-                setIncomingHasValue(Boolean(text && text.length))
-              } catch (err) {
-                alert('Failed to import file')
-              } finally {
-                e.currentTarget.value = ''
-              }
-            }} />
+        <InputPanel
+          incomingBuffer={incomingBuffer}
+          setIncomingBuffer={setIncomingBuffer}
+          incomingBufferRef={incomingBufferRef}
+          incomingHasValue={incomingHasValue}
+          setIncomingHasValue={setIncomingHasValue}
+          incomingCount={incomingCount}
+          t={t}
+        />
 
-            <div
-              id="incoming-list"
-              className="textarea"
-              style={{ padding: 8 }}
-              onPaste={(e) => {
-                e.preventDefault()
-                const text = e.clipboardData?.getData('text/plain') || ''
-                setIncomingBuffer(text)
-                incomingBufferRef.current = text
-                setIncomingHasValue(Boolean(text && text.length))
-              }}
-              onDragOver={(e) => { e.preventDefault() }}
-              onDrop={async (e) => {
-                e.preventDefault()
-                const file = e.dataTransfer.files?.[0]
-                if (file) {
-                  try {
-                    const text = await readFileAsText(file)
-                    setIncomingBuffer(text)
-                    incomingBufferRef.current = text
-                    setIncomingHasValue(Boolean(text && text.length))
-                  } catch {
-                    alert('Failed to import file')
-                  }
-                } else {
-                  const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text')
-                  if (text) {
-                    setIncomingBuffer(text)
-                    incomingBufferRef.current = text
-                    setIncomingHasValue(Boolean(text && text.length))
-                  }
-                }
-              }}
-            >
-              <VirtualizedViewer value={incomingBuffer} />
-              {!incomingHasValue && <div className="placeholder">{t('eachLinePlaceholder')}</div>}
-            </div>
-          </div>
-      </div>
-
-        <div className="card gridItem-actions">
-          <div className="actions">
-            <button className="btn btn-accent" type="button" onClick={handleSplitTwoAreas}>
-              {t('splitByAnyMatches')}
-        </button>
-            <div className="strict-row">
-              <button className="btn" type="button" onClick={handleStrictBegin}>{t('exactBegin')}</button>
-              <button className="btn" type="button" onClick={handleStrictInner}>{t('exactInner')}</button>
-              <button className="btn" type="button" onClick={handleStrictEnd}>{t('exactEnd')}</button>
-            </div>
-            <div className="strict-row">
-              <button className="btn" type="button" onClick={async () => { await handleDeduplicate() }}>{t('deduplicate')}</button>
-            </div>
-          </div>
-        </div>
+        <ActionsPanel
+          onSplitTwoAreas={handleSplitTwoAreas}
+          onStrictBegin={handleStrictBegin}
+          onStrictInner={handleStrictInner}
+          onStrictEnd={handleStrictEnd}
+          onDeduplicate={handleDeduplicate}
+          t={t}
+        />
 
         <OutputPanel
           className="gridItem-with"
