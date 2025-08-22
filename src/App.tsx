@@ -95,7 +95,7 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem('locale', locale)
-    const anyWindow = window as unknown as { ipcRenderer?: { send: (ch: string, payload: unknown) => void } }
+    const anyWindow = window as unknown as { ipcRenderer?: { send: (channel: string, payload: unknown) => void } }
     anyWindow.ipcRenderer?.send('locale-updated', locale)
   }, [locale])
 
@@ -105,7 +105,7 @@ function App() {
     const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
     const effective = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme
     root.setAttribute('data-theme', effective)
-    const anyWindow = window as unknown as { ipcRenderer?: { send: (ch: string, payload: unknown) => void } }
+    const anyWindow = window as unknown as { ipcRenderer?: { send: (channel: string, payload: unknown) => void } }
     anyWindow.ipcRenderer?.send('theme-updated', theme)
   }, [theme])
 
@@ -117,7 +117,7 @@ function App() {
       if (next === 'en' || next === 'ru' || next === 'uk') setLocale(next)
     }
     const anyWindow = window as unknown as {
-      ipcRenderer?: { on: (ch: string, fn: (...args: unknown[]) => void) => void; off: (ch: string, fn: (...args: unknown[]) => void) => void }
+      ipcRenderer?: { on: (channel: string, listener: (...args: unknown[]) => void) => void; off: (channel: string, listener: (...args: unknown[]) => void) => void }
     }
     anyWindow.ipcRenderer?.on('set-theme', onTheme)
     anyWindow.ipcRenderer?.on('set-locale', onLocale)
@@ -150,7 +150,7 @@ function App() {
 
   // Persist buffer periodically and on unload (best-effort)
   useEffect(() => {
-    const anyWindow = window as unknown as { ipcRenderer?: { send: (ch: string, payload: unknown) => void } }
+    const anyWindow = window as unknown as { ipcRenderer?: { send: (channel: string, payload: unknown) => void } }
     const handler = () => anyWindow.ipcRenderer?.send('save-buffer', incomingBufferRef.current || '')
     const id = window.setInterval(handler, 3000)
     window.addEventListener('beforeunload', handler)
