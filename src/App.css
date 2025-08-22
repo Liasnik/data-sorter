@@ -279,8 +279,10 @@ body {
 /* Virtualized viewer container */
 .virtual-list {
   width: 100%;
-  overflow: auto;
-  overflow-x: auto;
+  overflow: hidden;
+  /* We fix the height via media queries to eliminate layout fluctuations*/
+  height: 240px;
+  contain: content;
 }
 
 /* Thin, themed scrollbars for virtualized content */
@@ -296,8 +298,25 @@ body {
   background: transparent;
 }
 
+/* Prevent layout shift when scrollbars appear/disappear */
+/* .virtual-scroll { scrollbar-gutter: stable both-edges; overscroll-behavior: contain; } */
+
+.virtual-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+/* .virtual-scroll { scrollbar-width: none; } */
+
+/* Firefox scrollbar styling - только для Firefox */
+@supports (scrollbar-width: thin) and (not (-webkit-appearance: none)) {
+  .virtual-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb, #2b3342) transparent;
+  }
+}
+
 :root[data-theme="light"] .virtual-scroll::-webkit-scrollbar-thumb {
   background: #cfd6e3;
+}
+:root[data-theme="light"] {
+  --scrollbar-thumb: #cfd6e3;
 }
 
 .placeholder {
@@ -311,23 +330,29 @@ body {
 
 @media (min-width: 980px) {
   .gridItem-actions { min-height: 205px; }
+  .virtual-list { height: 110px; }
 }
 @media (min-width: 1200px) {
   .gridItem-actions { min-height: 256px; }
+  .virtual-list { height: 120px; }
 }
 @media (min-width: 1300px) {
   .gridItem-actions {min-height: 286px; }
+  .virtual-list { height: 150px; }
 }
 @media (min-width: 1400px) {
   .textarea { min-height: 180px; }
   .gridItem-actions {min-height: 336px; }
+  .virtual-list { height: 200px; }
 }
 @media (min-width: 1600px) {
   .textarea { min-height: 250px; }
   .gridItem-actions { min-height: 368px; }
+  .virtual-list { height: 230px; }
 }
 @media (min-width: 1700px) {
   .gridItem-actions { min-height: 376px; }
+  .virtual-list { height: 240px; }
 }
 
 .input-row { display: flex; gap: 8px; }
@@ -337,6 +362,12 @@ body {
 .replace-row {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.replace-row-buttons {
+  display: flex;
+  gap: 8px; 
   flex-wrap: wrap;
   justify-content: space-between;
 }

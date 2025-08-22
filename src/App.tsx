@@ -261,30 +261,28 @@ function App() {
     const lines = useMemo(() => (value ? value.split('\n') : []), [value])
     const itemSize = 20
     const [height, setHeight] = useState(240)
-    
-       useEffect(() => {
-        const updateHeight = () => {
-          if (window.innerWidth >= 1700) setHeight(240)
-          else if (window.innerWidth >= 1600) setHeight(230)
-          else if (window.innerWidth >= 1400) setHeight(200)
-          else if (window.innerWidth >= 1300) setHeight(150)
-          else if (window.innerWidth >= 1200) setHeight(120)
-          else if (window.innerWidth >= 980) setHeight(110)
-          else setHeight(90)
+    const containerRef = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+      const containerElement = containerRef.current
+      if (!containerElement) return
+      const resizeObserver = new ResizeObserver(resizeObserverEntries => {
+        for (const resizeObserverEntry of resizeObserverEntries) {
+          const observedHeight = Math.max(0, Math.floor(resizeObserverEntry.contentRect.height))
+          if (observedHeight !== height) setHeight(observedHeight)
         }
-        
-        updateHeight()
-        window.addEventListener('resize', updateHeight)
-        return () => window.removeEventListener('resize', updateHeight)
-      }, [])
-      
+      })
+      resizeObserver.observe(containerElement)
+      return () => resizeObserver.disconnect()
+    }, [height])
+    
 
     const Row = ({ index, style }: ListChildComponentProps) => (
       <div style={{ ...style, width: 'auto', right: 'auto', whiteSpace: 'pre' }}>{lines[index]}</div>
     )
     const VList = List as unknown as ComponentType<FixedSizeListProps>
     return (
-      <div className="virtual-list" style={{ width: '100%', height }}>
+      <div className="virtual-list" ref={containerRef} style={{ width: '100%' }}>
         <VList className="virtual-scroll" height={height} itemCount={lines.length} itemSize={itemSize} width={'100%'}>
           {Row}
         </VList>
@@ -523,7 +521,7 @@ function App() {
           <div className="actions">
             <button className="btn btn-accent" type="button" onClick={handleSplitTwoAreas}>
               {t('splitByAnyMatches')}
-            </button>
+        </button>
             <div className="strict-row">
               <button className="btn" type="button" onClick={handleStrictBegin}>{t('exactBegin')}</button>
               <button className="btn" type="button" onClick={handleStrictInner}>{t('exactInner')}</button>
@@ -566,7 +564,7 @@ function App() {
           <div className="actions">
             <button className="btn" type="button" onClick={handleCreateWithKeywords}>{t('withKeywordsBtn')}</button>
           </div>
-        </div>
+      </div>
 
         <div className="card gridItem-without">
           <div className="field-group">

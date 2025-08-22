@@ -12,7 +12,7 @@ if (!app.isPackaged) {
 
 // The built directory structure
 //
-// ├─┬─┬ dist
+// ├─┬─ dist
 // │ │ └── index.html
 // │ │
 // │ ├─┬ dist-electron
