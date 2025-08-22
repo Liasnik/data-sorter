@@ -260,7 +260,25 @@ function App() {
   function VirtualizedViewer({ value }: { value: string }) {
     const lines = useMemo(() => (value ? value.split('\n') : []), [value])
     const itemSize = 20
-    const height = 240
+    const [height, setHeight] = useState(240)
+    
+       useEffect(() => {
+        const updateHeight = () => {
+          if (window.innerWidth >= 1700) setHeight(240)
+          else if (window.innerWidth >= 1600) setHeight(230)
+          else if (window.innerWidth >= 1400) setHeight(200)
+          else if (window.innerWidth >= 1300) setHeight(150)
+          else if (window.innerWidth >= 1200) setHeight(120)
+          else if (window.innerWidth >= 980) setHeight(110)
+          else setHeight(90)
+        }
+        
+        updateHeight()
+        window.addEventListener('resize', updateHeight)
+        return () => window.removeEventListener('resize', updateHeight)
+      }, [])
+      
+
     const Row = ({ index, style }: ListChildComponentProps) => (
       <div style={{ ...style, width: 'auto', right: 'auto', whiteSpace: 'pre' }}>{lines[index]}</div>
     )
@@ -505,7 +523,7 @@ function App() {
           <div className="actions">
             <button className="btn btn-accent" type="button" onClick={handleSplitTwoAreas}>
               {t('splitByAnyMatches')}
-        </button>
+            </button>
             <div className="strict-row">
               <button className="btn" type="button" onClick={handleStrictBegin}>{t('exactBegin')}</button>
               <button className="btn" type="button" onClick={handleStrictInner}>{t('exactInner')}</button>

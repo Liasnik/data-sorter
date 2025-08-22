@@ -103,7 +103,7 @@ function buildMenu(locale: 'en' | 'ru' | 'uk') {
   ]
   return template
 }
-const APP_TITLE = 'Sorter8'
+const APP_TITLE = 'Sorter9'
 
 function createWindow() {
   win = new BrowserWindow({
@@ -118,7 +118,7 @@ function createWindow() {
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
 
   // Add context menu for text inputs and areas
-  win.webContents.on('context-menu', (e, params) => {
+  win.webContents.on('context-menu', (_, params) => {
     const { x, y } = params
     
     // Get localized labels based on current locale

@@ -55,6 +55,7 @@ body {
   max-width: none;
   margin: 0;
   padding: 24px;
+  padding-bottom: 10px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -263,7 +264,7 @@ body {
 
 .textarea {
   width: 100%;
-  min-height: 140px;
+  /* min-height: 140px; */
   padding: 10px 12px;
   color: var(--text);
   background: #0b0f17;
@@ -278,7 +279,6 @@ body {
 /* Virtualized viewer container */
 .virtual-list {
   width: 100%;
-  height: 240px;
   overflow: auto;
   overflow-x: auto;
 }
@@ -310,15 +310,24 @@ body {
 }
 
 @media (min-width: 980px) {
-  .gridItem-actions { min-height: 206px; }
+  .gridItem-actions { min-height: 205px; }
+}
+@media (min-width: 1200px) {
+  .gridItem-actions { min-height: 256px; }
+}
+@media (min-width: 1300px) {
+  .gridItem-actions {min-height: 286px; }
 }
 @media (min-width: 1400px) {
   .textarea { min-height: 180px; }
-  .gridItem-actions {min-height: 246px; }
+  .gridItem-actions {min-height: 336px; }
 }
 @media (min-width: 1600px) {
   .textarea { min-height: 250px; }
-  .gridItem-actions { min-height: 316px; }
+  .gridItem-actions { min-height: 368px; }
+}
+@media (min-width: 1700px) {
+  .gridItem-actions { min-height: 376px; }
 }
 
 .input-row { display: flex; gap: 8px; }
