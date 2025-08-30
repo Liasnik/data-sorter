@@ -25,3 +25,6 @@ dist-ssr
 /release/
 /dist/
 /dist-electron/
+
+# Local Netlify folder
+.netlify
