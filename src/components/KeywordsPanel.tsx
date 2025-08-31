@@ -10,6 +10,7 @@ type KeywordsPanelProps = {
   onReplace: () => void;
   onReplaceUpper: () => void;
   t: (key: string) => string;
+  disabled?: boolean;
 }
 
 export function KeywordsPanel({
@@ -22,6 +23,7 @@ export function KeywordsPanel({
   onReplace,
   onReplaceUpper,
   t,
+  disabled = false,
 }: KeywordsPanelProps) {
   return (
     <section className="panel">
@@ -94,8 +96,8 @@ export function KeywordsPanel({
           <button id="del" className="btn" type="button" onClick={onClearAll}>{t('clearAllData')}</button>
         </div>
         <div className="replace-row-buttons">
-          <button className="btn " type="button" onClick={onReplace}>{t('replace')}</button>
-          <button className="btn" type="button" onClick={onReplaceUpper}>{t('replaceUppercase')}</button>
+          <button className="btn " type="button" onClick={onReplace} disabled={disabled}>{t('replace')}</button>
+          <button className="btn" type="button" onClick={onReplaceUpper} disabled={disabled}>{t('replaceUppercase')}</button>
         </div>
       </div>
     </section>

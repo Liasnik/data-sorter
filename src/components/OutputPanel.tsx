@@ -12,6 +12,8 @@ type OutputPanelProps = {
   actionButtonText: string;
   onActionButtonClick: () => void;
   t: (key: 'copyTooltip' | 'copied') => string;
+  loading?: boolean;
+  disabled?: boolean;
 }
 
 export function OutputPanel({
@@ -24,6 +26,8 @@ export function OutputPanel({
   actionButtonText,
   onActionButtonClick,
   t,
+  loading = false,
+  disabled = false,
 }: OutputPanelProps) {
   return (
     <div className={`card ${className}`}>
@@ -57,10 +61,17 @@ export function OutputPanel({
             </span>
           )}
         </div>
-        <VirtualizedViewer value={value} />
+        <div style={{ position: 'relative' }}>
+          <VirtualizedViewer value={value} />
+          {loading && (
+            <div className="spinner-overlay" role="status" aria-live="polite">
+              <div className="spinner" />
+            </div>
+          )}
+        </div>
       </div>
       <div className="actions">
-        <button className="btn" type="button" onClick={onActionButtonClick}>
+        <button className="btn" type="button" onClick={onActionButtonClick} disabled={disabled}>
           {actionButtonText}
         </button>
       </div>

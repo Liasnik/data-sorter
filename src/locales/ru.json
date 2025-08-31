@@ -16,7 +16,7 @@
   "dataWithoutKeywords": "Данные без ключевых слов",
   "withoutKeywordsBtn": "Без ключевых слов",
   "clearAllData": "Очистить все данные",
-  "clearLists": "очистить списки",
+  "clearLists": "Очистить списки",
   "copyTooltip": "Копировать",
   "replacementError": "Ошибка замены",
   "differentCountError": "Разное количество введённых значений! Введите корректные данные!",
@@ -31,7 +31,8 @@
   "cut": "Вырезать",
   "copy": "Копировать",
   "paste": "Вставить",
-  "selectAll": "Выбрать все"
+  "selectAll": "Выбрать все",
+  "clear": "Очистить"
 }
 
 

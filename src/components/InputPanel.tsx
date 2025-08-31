@@ -1,8 +1,9 @@
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { readFileAsText } from '../utils/fileImport'
 import { ClearIcon } from './Icons'
 import { CopyWithToast } from './CopyWithToast'
 import { VirtualizedViewer } from './VirtualizedViewer'
+import { WebContextMenu } from './WebContextMenu'
 
 type InputPanelProps = {
   incomingBuffer: string;
@@ -24,16 +25,23 @@ export function InputPanel({
   t,
 }: InputPanelProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [ctxOpen, setCtxOpen] = useState(false)
+  const [ctxPos, setCtxPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const isElectron = typeof (window as unknown as { ipcRenderer?: unknown }).ipcRenderer !== 'undefined'
+  const [loading, setLoading] = useState(false)
 
   const handleFileImport = async (file: File | null | undefined) => {
     if (!file) return
     try {
+      setLoading(true)
       const text = await readFileAsText(file)
       setIncomingBuffer(text)
       incomingBufferRef.current = text
       setIncomingHasValue(Boolean(text && text.length))
     } catch (err) {
       alert('Failed to import file')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -51,12 +59,30 @@ export function InputPanel({
     } else {
       const text = event.dataTransfer.getData('text/plain') || event.dataTransfer.getData('text')
       if (text) {
-        setIncomingBuffer(text)
-        incomingBufferRef.current = text
-        setIncomingHasValue(Boolean(text && text.length))
+        setLoading(true)
+        try {
+          setIncomingBuffer(text)
+          incomingBufferRef.current = text
+          setIncomingHasValue(Boolean(text && text.length))
+        } finally {
+          setLoading(false)
+        }
       }
     }
   }
+
+  useEffect(() => {
+    if (!ctxOpen) return
+    const close = () => setCtxOpen(false)
+    window.addEventListener('click', close)
+    window.addEventListener('resize', close)
+    window.addEventListener('blur', close)
+    return () => {
+      window.removeEventListener('click', close)
+      window.removeEventListener('resize', close)
+      window.removeEventListener('blur', close)
+    }
+  }, [ctxOpen])
 
   return (
     <div className="card gridItem-input">
@@ -114,19 +140,61 @@ export function InputPanel({
           role="textbox"
           aria-multiline="true"
           aria-label={t('pasteListHere')}
+          aria-busy={loading}
           style={{ padding: 8 }}
           onPaste={(e) => {
             e.preventDefault()
             const text = e.clipboardData?.getData('text/plain') || ''
-            setIncomingBuffer(text)
-            incomingBufferRef.current = text
-            setIncomingHasValue(Boolean(text && text.length))
+            setLoading(true)
+            try {
+              setIncomingBuffer(text)
+              incomingBufferRef.current = text
+              setIncomingHasValue(Boolean(text && text.length))
+            } finally {
+              setLoading(false)
+            }
+          }}
+          onContextMenu={(e) => {
+            if (isElectron) return // дать Electron показать системное меню
+            e.preventDefault()
+            setCtxPos({ x: e.clientX, y: e.clientY })
+            setCtxOpen(true)
           }}
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
         >
           <VirtualizedViewer value={incomingBuffer} />
           {!incomingHasValue && <div className="placeholder">{t('eachLinePlaceholder')}</div>}
+          {loading && (
+            <div className="spinner-overlay" role="status" aria-live="polite">
+              <div className="spinner" />
+            </div>
+          )}
+          {ctxOpen && !isElectron && (
+            <WebContextMenu
+              x={ctxPos.x}
+              y={ctxPos.y}
+              onClose={() => setCtxOpen(false)}
+              onPaste={async () => {
+                setLoading(true)
+                try {
+                  const text = await navigator.clipboard.readText()
+                  if (typeof text === 'string') {
+                    setIncomingBuffer(text)
+                    incomingBufferRef.current = text
+                    setIncomingHasValue(Boolean(text && text.length))
+                  }
+                } finally {
+                  setLoading(false)
+                }
+              }}
+              onCopy={async () => {
+                await navigator.clipboard.writeText(incomingBufferRef.current || incomingBuffer || '')
+              }}
+              onClear={() => handleClear()}
+              t={(k) => t(k)}
+            />
+          )}
         </div>
       </div>
     </div>

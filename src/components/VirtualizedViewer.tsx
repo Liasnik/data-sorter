@@ -3,11 +3,13 @@ import { FixedSizeList as List, ListChildComponentProps, type FixedSizeListProps
 
 type VirtualizedViewerProps = {
   value: string;
+  fontSize?: number; 
 }
 
-export function VirtualizedViewer({ value }: VirtualizedViewerProps) {
+export function VirtualizedViewer({ value, fontSize = 14 }: VirtualizedViewerProps) {
   const lines = useMemo(() => (value ? value.split('\n') : []), [value])
-  const itemSize = 20
+  const rowHeight = Math.max(16, Math.ceil(fontSize * 1.4))
+  const itemSize = rowHeight
   const [height, setHeight] = useState(240)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -27,7 +29,7 @@ export function VirtualizedViewer({ value }: VirtualizedViewerProps) {
   }, [height])
 
   const Row = ({ index, style }: ListChildComponentProps) => (
-    <div style={{ ...style, width: 'auto', right: 'auto', whiteSpace: 'pre' }}>{lines[index]}</div>
+    <div style={{ ...style, width: 'auto', right: 'auto', whiteSpace: 'pre', fontSize, lineHeight: `${rowHeight}px` }}>{lines[index]}</div>
   )
   
   const VList = List as unknown as ComponentType<FixedSizeListProps>

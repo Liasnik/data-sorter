@@ -16,7 +16,7 @@
   "dataWithoutKeywords": "Дані без ключових слів",
   "withoutKeywordsBtn": "Без ключових слів",
   "clearAllData": "Очистити всі дані",
-  "clearLists": "очистити списки",
+  "clearLists": "Очистити списки",
   "copyTooltip": "Копіювати",
   "replacementError": "Помилка заміни",
   "differentCountError": "Різна кількість введених значень! Введіть коректні дані!",
@@ -30,5 +30,6 @@
   "cut": "Вирізати",
   "copy": "Копіювати",
   "paste": "Вставити",
-  "selectAll": "Вибрати все"
+  "selectAll": "Вибрати все",
+  "clear": "Очистити"
 }

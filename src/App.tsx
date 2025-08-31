@@ -30,6 +30,7 @@ function App() {
     withoutKeywords,
     leftLabelMode,
     rightLabelMode,
+    loading,
     handleSplitTwoAreas,
     handleStrictBegin,
     handleStrictInner,
@@ -176,6 +177,7 @@ function App() {
   const incomingCount = useMemo(() => countLines(incomingBuffer), [incomingBuffer])
   const withCount = useMemo(() => countLines(withKeywords), [withKeywords])
   const withoutCount = useMemo(() => countLines(withoutKeywords), [withoutKeywords])
+  const isInputEmpty = useMemo(() => !incomingBuffer || incomingBuffer.length === 0, [incomingBuffer])
 
   const leftLabel = useMemo(() => {
     switch (leftLabelMode) {
@@ -207,6 +209,7 @@ function App() {
         onClearAll={onClearAll}
         onReplace={handleReplace}
         onReplaceUpper={handleReplaceUpper}
+        disabled={isInputEmpty}
         t={t}
       />
       <section className="grid">
@@ -225,6 +228,7 @@ function App() {
           onStrictInner={handleStrictInner}
           onStrictEnd={handleStrictEnd}
           onDeduplicate={handleDeduplicate}
+          disabled={isInputEmpty}
           t={t}
         />
         <OutputPanel
@@ -232,10 +236,12 @@ function App() {
           label={leftLabel}
           htmlFor="with-keywords"
           value={withKeywords}
+          loading={loading}
           count={withCount}
           onClear={clearWithKeywords}
           actionButtonText={t('withKeywordsBtn')}
           onActionButtonClick={handleCreateWithKeywords}
+          disabled={isInputEmpty}
           t={t as (key: 'copyTooltip' | 'copied') => string}
         />
         <OutputPanel
@@ -243,10 +249,12 @@ function App() {
           label={rightLabel}
           htmlFor="without-keywords"
           value={withoutKeywords}
+          loading={loading}
           count={withoutCount}
           onClear={clearWithoutKeywords}
           actionButtonText={t('withoutKeywordsBtn')}
           onActionButtonClick={handleCreateWithoutKeywords}
+          disabled={isInputEmpty}
           t={t as (key: 'copyTooltip' | 'copied') => string}
         />
       </section>

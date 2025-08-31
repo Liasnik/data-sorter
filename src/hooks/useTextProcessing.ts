@@ -22,6 +22,7 @@ export function useTextProcessing({ getInput, getKeywords, getReplacements, t }:
   const [withoutKeywords, setWithoutKeywords] = useState<string>('')
   const [leftLabelMode, setLeftLabelMode] = useState<LabelMode>('withKeywords')
   const [rightLabelMode, setRightLabelMode] = useState<LabelMode>('withoutKeywords')
+  const [loading, setLoading] = useState<boolean>(false)
   
   const workerRef = useRef<Worker | null>(null)
   const pendingRef = useRef<Map<string, (result: WorkerResult) => void>>(new Map())
@@ -59,62 +60,93 @@ export function useTextProcessing({ getInput, getKeywords, getReplacements, t }:
 
   // Handler functions without parameters (for passing to components)
   const handleSplitTwoAreas = useCallback(async () => {
-    const result = await callWorker({ type: 'splitTwo', input: getInput(), keywords: getKeywords() })
-    if (result?.ok) {
-      setWithKeywords(result.with || '')
-      setWithoutKeywords(result.without || '')
-      setLeftLabelMode('withKeywords')
-      setRightLabelMode('withoutKeywords')
+    setLoading(true)
+    try {
+      const result = await callWorker({ type: 'splitTwo', input: getInput(), keywords: getKeywords() })
+      if (result?.ok) {
+        setWithKeywords(result.with || '')
+        setWithoutKeywords(result.without || '')
+        setLeftLabelMode('withKeywords')
+        setRightLabelMode('withoutKeywords')
+      }
+    } finally {
+      setLoading(false)
     }
   }, [callWorker, getInput, getKeywords])
 
   const handleStrictBegin = useCallback(async () => {
-    const result = await callWorker({ type: 'strictBegin', input: getInput(), keywords: getKeywords() })
-    if (result?.ok) {
-      setWithKeywords(result.with || '')
-      setWithoutKeywords(result.without || '')
-      setLeftLabelMode('withKeywords')
-      setRightLabelMode('withoutKeywords')
+    setLoading(true)
+    try {
+      const result = await callWorker({ type: 'strictBegin', input: getInput(), keywords: getKeywords() })
+      if (result?.ok) {
+        setWithKeywords(result.with || '')
+        setWithoutKeywords(result.without || '')
+        setLeftLabelMode('withKeywords')
+        setRightLabelMode('withoutKeywords')
+      }
+    } finally {
+      setLoading(false)
     }
   }, [callWorker, getInput, getKeywords])
 
   const handleStrictInner = useCallback(async () => {
-    const result = await callWorker({ type: 'strictInner', input: getInput(), keywords: getKeywords() })
-    if (result?.ok) {
-      setWithKeywords(result.with || '')
-      setWithoutKeywords(result.without || '')
-      setLeftLabelMode('withKeywords')
-      setRightLabelMode('withoutKeywords')
+    setLoading(true)
+    try {
+      const result = await callWorker({ type: 'strictInner', input: getInput(), keywords: getKeywords() })
+      if (result?.ok) {
+        setWithKeywords(result.with || '')
+        setWithoutKeywords(result.without || '')
+        setLeftLabelMode('withKeywords')
+        setRightLabelMode('withoutKeywords')
+      }
+    } finally {
+      setLoading(false)
     }
   }, [callWorker, getInput, getKeywords])
 
   const handleStrictEnd = useCallback(async () => {
-    const result = await callWorker({ type: 'strictEnd', input: getInput(), keywords: getKeywords() })
-    if (result?.ok) {
-      setWithKeywords(result.with || '')
-      setWithoutKeywords(result.without || '')
-      setLeftLabelMode('withKeywords')
-      setRightLabelMode('withoutKeywords')
+    setLoading(true)
+    try {
+      const result = await callWorker({ type: 'strictEnd', input: getInput(), keywords: getKeywords() })
+      if (result?.ok) {
+        setWithKeywords(result.with || '')
+        setWithoutKeywords(result.without || '')
+        setLeftLabelMode('withKeywords')
+        setRightLabelMode('withoutKeywords')
+      }
+    } finally {
+      setLoading(false)
     }
   }, [callWorker, getInput, getKeywords])
 
   const handleCreateWithKeywords = useCallback(async () => {
-    const result = await callWorker({ type: 'createWith', input: getInput(), keywords: getKeywords() })
-    if (result?.ok) {
-      setWithKeywords(result.with || '')
-      setLeftLabelMode('withKeywords')
+    setLoading(true)
+    try {
+      const result = await callWorker({ type: 'createWith', input: getInput(), keywords: getKeywords() })
+      if (result?.ok) {
+        setWithKeywords(result.with || '')
+        setLeftLabelMode('withKeywords')
+      }
+    } finally {
+      setLoading(false)
     }
   }, [callWorker, getInput, getKeywords])
 
   const handleCreateWithoutKeywords = useCallback(async () => {
-    const result = await callWorker({ type: 'createWithout', input: getInput(), keywords: getKeywords() })
-    if (result?.ok) {
-      setWithoutKeywords(result.without || '')
-      setRightLabelMode('withoutKeywords')
+    setLoading(true)
+    try {
+      const result = await callWorker({ type: 'createWithout', input: getInput(), keywords: getKeywords() })
+      if (result?.ok) {
+        setWithoutKeywords(result.without || '')
+        setRightLabelMode('withoutKeywords')
+      }
+    } finally {
+      setLoading(false)
     }
   }, [callWorker, getInput, getKeywords])
 
   const handleReplace = useCallback(async () => {
+    setLoading(true)
     const result = await callWorker({ 
       type: 'replace', 
       input: getInput(), 
@@ -127,9 +159,11 @@ export function useTextProcessing({ getInput, getKeywords, getReplacements, t }:
     } else {
       alert(t('replacementError'))
     }
+    setLoading(false)
   }, [callWorker, getInput, getKeywords, getReplacements, t])
 
   const handleReplaceUpper = useCallback(async () => {
+    setLoading(true)
     const result = await callWorker({ 
       type: 'replaceUpper', 
       input: getInput(), 
@@ -142,15 +176,21 @@ export function useTextProcessing({ getInput, getKeywords, getReplacements, t }:
     } else {
       alert(t('replacementError'))
     }
+    setLoading(false)
   }, [callWorker, getInput, getKeywords, getReplacements, t])
 
   const handleDeduplicate = useCallback(async () => {
-    const result = await callWorker({ type: 'dedup', input: getInput() })
-    if (result?.ok) {
-      setWithKeywords(result.with || '')
-      setWithoutKeywords(result.without || '')
-      setLeftLabelMode('withoutDuplicates')
-      setRightLabelMode('duplicates')
+    setLoading(true)
+    try {
+      const result = await callWorker({ type: 'dedup', input: getInput() })
+      if (result?.ok) {
+        setWithKeywords(result.with || '')
+        setWithoutKeywords(result.without || '')
+        setLeftLabelMode('withoutDuplicates')
+        setRightLabelMode('duplicates')
+      }
+    } finally {
+      setLoading(false)
     }
   }, [callWorker, getInput])
 
@@ -173,6 +213,7 @@ export function useTextProcessing({ getInput, getKeywords, getReplacements, t }:
     withoutKeywords,
     leftLabelMode,
     rightLabelMode,
+    loading,
     
     // Actions
     handleSplitTwoAreas,
