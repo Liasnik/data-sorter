@@ -1,0 +1,12 @@
+[build]
+  command = "yarn build:web"
+  publish = "dist"
+
+[context.production]
+  command = "yarn build:web"
+
+[context.deploy-preview]
+  command = "yarn build:web"
+
+[context.branch-deploy]
+  command = "yarn build:web"
