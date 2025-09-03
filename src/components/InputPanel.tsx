@@ -98,7 +98,7 @@ export function InputPanel({
             <label htmlFor="incoming-list" className="label">{t('pasteListHere')}</label>
             {incomingCount > 0 && (
               <>
-                <span className="line-count">{incomingCount}</span>
+                <span className="line-count">{incomingCount.toLocaleString()}</span>
                 <CopyWithToast getText={() => incomingBufferRef.current || incomingBuffer || ''} t={t} />
               </>
             )}
@@ -129,8 +129,9 @@ export function InputPanel({
           accept=".xlsx,.xls,.csv,.txt"
           style={{ display: 'none' }}
           onChange={async (e) => {
+            const target = e.currentTarget
             await handleFileImport(e.target.files?.[0])
-            e.currentTarget.value = ''
+            target.value = ''
           }}
         />
         <div

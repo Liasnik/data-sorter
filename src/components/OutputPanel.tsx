@@ -1,6 +1,7 @@
-import { ClearIcon } from './Icons'
+import { ClearIcon, DownloadIcon } from './Icons'
 import { CopyWithToast } from './CopyWithToast'
 import { VirtualizedViewer } from './VirtualizedViewer'
+import * as XLSX from 'xlsx'
 
 type OutputPanelProps = {
   className: string;
@@ -29,6 +30,23 @@ export function OutputPanel({
   loading = false,
   disabled = false,
 }: OutputPanelProps) {
+  const handleExport = () => {
+    if (!value) return
+    const lines = value.split('\n').filter((line) => line)
+    const data = lines.map((line) => line.split('\t'))
+    const worksheet = XLSX.utils.aoa_to_sheet(data)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
+    const fileName = `${label}.xlsx`.replace(/[^a-z0-9_.-]/gi, '_').replace(/_{2,}/g, '_')
+    XLSX.writeFile(workbook, fileName)
+  }
+
+  const onKey = (e: React.KeyboardEvent<HTMLSpanElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleExport()
+    }
+  }
   return (
     <div className={`card ${className}`}>
       <div className="field-group">
@@ -37,8 +55,19 @@ export function OutputPanel({
             <label htmlFor={htmlFor} className="label">{label}</label>
             {count > 0 && (
               <>
-                <span className="line-count">{count}</span>
+                <span className="line-count">{count.toLocaleString()}</span>
                 <CopyWithToast getText={() => value} t={t} />
+                <span
+                  className="copy-icon"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Export to Excel"
+                  title="Export to Excel"
+                  onClick={handleExport}
+                  onKeyDown={onKey}
+                >
+                  <DownloadIcon />
+                </span>
               </>
             )}
           </div>
